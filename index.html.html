@@ -1107,24 +1107,30 @@
       let isDragging = false;
       let startX, startY, initialX, initialY;
       
-      handle.onmousedown = function(e) {
-        e.preventDefault(); // Fix for drag getting stuck due to text selection
+      handle.onpointerdown = function(e) {
+        e.preventDefault();
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
         initialX = overlay.offsetLeft;
         initialY = overlay.offsetTop;
-        document.onmousemove = function(e) {
+        
+        handle.setPointerCapture(e.pointerId);
+        
+        handle.onpointermove = function(e) {
           if (!isDragging) return;
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
           overlay.style.left = (initialX + dx) + 'px';
           overlay.style.top = (initialY + dy) + 'px';
         };
-        document.onmouseup = function() {
+        
+        handle.onpointerup = function(e) {
           isDragging = false;
-          document.onmousemove = null;
-          document.onmouseup = null;
+          handle.onpointermove = null;
+          handle.onpointerup = null;
+          handle.releasePointerCapture(e.pointerId);
+          
           root.style.setProperty('--stats-x', overlay.style.left);
           root.style.setProperty('--stats-y', overlay.style.top);
           autoSaveLocal();
@@ -1395,9 +1401,26 @@
       if (!data) return; // If empty, our first autoSaveLocal will populate it
       
       const currentDeptsStr = JSON.stringify(DEPTS);
-      if (data.depts === currentDeptsStr) return; // Ignore our own echo
       
-      if (data.depts) {
+      // Read current theme state to prevent echoes on theme-only changes
+      const rs = getComputedStyle(root);
+      const currentThemeStr = JSON.stringify({
+        w: rs.getPropertyValue('--node-w').trim(),
+        f: rs.getPropertyValue('--font-mult').trim(),
+        bg: rs.getPropertyValue('--box-bg').trim(),
+        ink: rs.getPropertyValue('--ink').trim(),
+        vac: rs.getPropertyValue('--vacant').trim(),
+        line: rs.getPropertyValue('--line').trim(),
+        paper: rs.getPropertyValue('--paper').trim(),
+        statsX: rs.getPropertyValue('--stats-x').trim(),
+        statsY: rs.getPropertyValue('--stats-y').trim()
+      });
+
+      if (data.depts === currentDeptsStr && data.theme === currentThemeStr) {
+        return; // Exact echo, ignore
+      }
+      
+      if (data.depts && data.depts !== currentDeptsStr) {
         try {
           const parsed = JSON.parse(data.depts);
           const salesSumTree = parsed.find(d => d.id === 'salessummary')?.tree;

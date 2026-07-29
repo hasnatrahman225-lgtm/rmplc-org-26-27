@@ -22,25 +22,12 @@
   #org-root * { box-sizing: border-box; }
 
   .div-stats-overlay {
-    position: absolute;
-    left: var(--stats-x, 20px);
-    top: var(--stats-y, 80px);
-    z-index: 1000;
+    display: inline-block;
+    margin-bottom: 25px;
     background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    border: 1px solid #000;
-  }
-  .drag-handle {
-    background: #f7b78b;
-    cursor: move;
-    padding: 3px;
-    font-size: 10px;
-    font-weight: bold;
-    text-align: center;
-    border-bottom: 1px solid #000;
-    font-family: sans-serif;
-    user-select: none;
-    color: #000;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
   }
   .div-stats-table {
     border-collapse: collapse;
@@ -933,6 +920,9 @@
       <div class="dept-meta"><b>${escapeHtml(dept.label)}</b> — ${escapeHtml(dept.meta)}</div>
 
       ${renderSummaryTables(dept.id)}
+      
+      ${renderDivStatsTable(dept)}
+
       <div class="chart-scroll ${!dept.isSummary ? 'standard-view' : 'summary-view'}">
         <div class="tree">
           <ul>
@@ -940,8 +930,7 @@
           </ul>
         </div>
       </div>
-      
-      ${renderDivStatsTable(dept)}
+
 
       <div class="legend">
         <span><span class="swatch v"></span>Vacant position</span>
@@ -1100,43 +1089,6 @@
       el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
     });
     root.querySelectorAll('button[data-action]').forEach(el => el.addEventListener('click', onButtonClick));
-
-    const overlay = document.getElementById('div-stats-overlay');
-    const handle = document.getElementById('div-stats-handle');
-    if (overlay && handle) {
-      let isDragging = false;
-      let startX, startY, initialX, initialY;
-      
-      handle.onpointerdown = function(e) {
-        e.preventDefault();
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialX = overlay.offsetLeft;
-        initialY = overlay.offsetTop;
-        
-        handle.setPointerCapture(e.pointerId);
-        
-        handle.onpointermove = function(e) {
-          if (!isDragging) return;
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          overlay.style.left = (initialX + dx) + 'px';
-          overlay.style.top = (initialY + dy) + 'px';
-        };
-        
-        handle.onpointerup = function(e) {
-          isDragging = false;
-          handle.onpointermove = null;
-          handle.onpointerup = null;
-          handle.releasePointerCapture(e.pointerId);
-          
-          root.style.setProperty('--stats-x', overlay.style.left);
-          root.style.setProperty('--stats-y', overlay.style.top);
-          autoSaveLocal();
-        };
-      };
-    }
   }
 
   function renderDivStatsTable(dept) {
@@ -1166,8 +1118,7 @@
     const title = "DIV-" + dept.id.replace('div','');
 
     return `
-      <div class="div-stats-overlay" id="div-stats-overlay">
-        <div class="drag-handle" id="div-stats-handle">⠿ Drag to Move</div>
+      <div class="div-stats-overlay">
         <table class="div-stats-table">
           <thead>
             <tr>

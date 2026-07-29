@@ -1378,6 +1378,24 @@
           if (salesSumTree && supportTree && supportTree.children && supportTree.children[0] && supportTree.children[0].children[0] && supportTree.children[0].children[0].link) {
             supportTree.children[0].children[0].link.summaryNode = salesSumTree;
           }
+          
+          // --- MIGRATION: Force update Div-1 from hardcoded data if it's outdated in Firebase ---
+          const div1 = parsed.find(d => d.id === 'div1');
+          if (div1) {
+            const galib = findNodeByName(div1.tree, 'Galib');
+            if (galib && galib.children && galib.children.length >= 4 && galib.children[3].name === 'Vacant') {
+              // It's the old data! Overwrite with the newly updated deptDiv1
+              div1.tree = JSON.parse(JSON.stringify(deptDiv1));
+              setTimeout(() => {
+                // Save it back to Firebase so it persists for everyone
+                if (window.firebase) {
+                  firebase.database().ref('organogram/depts').set(JSON.stringify(DEPTS));
+                }
+              }, 2000);
+            }
+          }
+          // ----------------------------------------------------------------------------------------
+
           DEPTS = parsed;
         } catch(e) {}
       }

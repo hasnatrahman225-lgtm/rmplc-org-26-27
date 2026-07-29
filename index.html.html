@@ -1,0 +1,1383 @@
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<div id="org-root"></div>
+<style>
+  #org-root {
+    --ink: #1c2530;
+    --paper: #f6f5f1;
+    --line: #c9c2b4;
+    --accent: #8a3324;
+    --accent-soft: #cf6b52;
+    --vacant: #b7dfb0;
+    --vacant-line: #6fa564;
+    --box-bg: #ffffff;
+    --font-mult: 1;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: var(--ink);
+    background: var(--paper);
+    padding: 24px 18px 60px;
+    min-height: 100%;
+    box-sizing: border-box;
+  }
+  #org-root * { box-sizing: border-box; }
+
+  .div-stats-overlay {
+    display: inline-block;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    z-index: 1000;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    border: 1px solid #000;
+  }
+  .div-stats-table {
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #000;
+  }
+  .div-stats-table th, .div-stats-table td {
+    border: 1px solid #000;
+    padding: 3px 6px;
+    text-align: center;
+  }
+  .div-stats-table thead th, .div-stats-table tfoot th, .div-stats-table th[rowspan] {
+    background-color: #f7b78b;
+    font-weight: bold;
+  }
+  .div-stats-table tbody th {
+    text-align: left;
+    background-color: #fff;
+    font-weight: normal;
+  }
+  .div-stats-table td {
+    background-color: #fff;
+    width: 45px;
+    height: 24px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .div-stats-table td[contenteditable] {
+    cursor: text;
+    background-color: #fff;
+  }
+  .div-stats-table td[contenteditable]:hover {
+    background-color: #fef0e6;
+  }
+  .div-stats-table td[contenteditable]:focus {
+    outline: 2px solid var(--accent);
+    background-color: #fff;
+  }
+  @media print { .div-stats-overlay { position: absolute; } }
+
+  .toolbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 12px;
+  }
+  .toolbar h1 { font-size: 18px; letter-spacing: 0.03em; text-transform: uppercase; margin: 0; font-weight: 700; }
+  .toolbar .sub { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11.5px; color: #6b6255; margin-top: 2px; }
+  .toolbar-actions { display: flex; gap: 8px; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  .btn {
+    font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; letter-spacing: 0.02em;
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
+    padding: 7px 12px; cursor: pointer; border-radius: 2px; transition: background 0.15s, color 0.15s;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-soft); border-color: var(--accent-soft); }
+
+  .theme-dialog {
+    border: 1px solid #444; border-radius: 6px; padding: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3); max-width: 400px; margin: auto;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #eee; background: #2b2b2b;
+  }
+  .theme-dialog::backdrop { background: rgba(0,0,0,0.6); }
+  .theme-dialog h3 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: #fff; border-bottom: 1px solid #444; padding-bottom: 8px; }
+  .theme-dialog .form-group { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 13px; }
+  .theme-dialog input[type="color"] { cursor: pointer; padding: 0; border: none; width: 32px; height: 32px; background: transparent; border-radius: 4px; overflow: hidden; }
+  .theme-dialog input[type="number"] { width: 60px; padding: 4px; border: 1px solid #555; border-radius: 3px; background: #1e1e1e; color: #fff; }
+  .theme-dialog .dialog-btns { margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px; }
+  .theme-dialog .btn { border-color: #555; color: #eee; }
+  .theme-dialog .btn:hover { background: #444; color: #fff; }
+  .theme-dialog .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .tab-btn {
+    font-size: 11.5px;
+    border: 1.3px solid var(--line);
+    background: #fff;
+    color: #6b6255;
+    padding: 6px 11px;
+    border-radius: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab-btn.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .tab-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+  .dept-meta {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11.5px;
+    color: #6b6255;
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .dept-meta b { color: var(--ink); }
+
+  .chart-scroll { overflow-x: auto; padding: 10px 4px 30px; }
+
+  /* ---- tree (classic nested-ul org chart pattern) ---- */
+  .tree { text-align: center; }
+  .tree ul, .tree li { list-style: none; margin: 0; padding: 0; }
+  .tree ul { padding-top: 14px; position: relative; display: flex; }
+  .tree li {
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+    padding: 14px 4px 0 4px;
+  }
+  .tree li::before, .tree li::after {
+    content: ''; position: absolute; top: 0; right: 50%;
+    border-top: 2.5px solid var(--ink); width: 50%; height: 14px;
+  }
+  .tree li::after { right: auto; left: 50%; border-left: 2.5px solid var(--ink); }
+  .tree li:only-child::after, .tree li:only-child::before { display: none; }
+  .tree li:only-child { padding-top: 0; }
+  .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+  .tree li:last-child::before { border-right: 2.5px solid var(--ink); border-radius: 0 4px 0 0; }
+  .tree li:first-child::after { border-radius: 4px 0 0 0; }
+  .tree ul ul::before {
+    content: ''; position: absolute; top: 0; left: 50%;
+    border-left: 2.5px solid var(--ink); width: 0; height: 14px;
+  }
+  
+  /* Vertical stacking for lower levels */
+  .tree ul.vertical {
+    flex-direction: column;
+    padding-top: 14px;
+    align-items: center;
+  }
+  .tree ul.vertical li::before, .tree ul.vertical li::after {
+    display: none;
+  }
+  .tree ul.vertical li {
+    padding: 14px 0 0 0;
+  }
+  .tree ul.vertical li:first-child {
+    padding-top: 0;
+  }
+  .tree ul.vertical li:not(:first-child)::after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0; left: 50%;
+    width: 0; height: 14px;
+    border-left: 2.5px solid var(--ink);
+    border-top: none; border-right: none;
+  }
+  .tree > ul { padding-top: 0; display: flex; justify-content: center; min-width: max-content; }
+  .tree > ul > li { padding-top: 0; }
+  .tree > ul > li::before, .tree > ul > li::after { display: none; }
+
+  .node-card {
+    display: inline-flex;
+    flex-direction: column;
+    width: var(--node-w, 120px);
+    aspect-ratio: 2 / 1;
+    border: 1.5px solid var(--ink);
+    background: var(--box-bg);
+    padding: 3px 4px 22px 4px;
+    border-radius: 3px;
+    position: relative;
+    margin-top: 0;
+    overflow: hidden;
+  }
+  .node-card.vacant { background: var(--vacant); border-color: var(--vacant-line); }
+  .node-card .n-name {
+    font-size: 12px; font-weight: 700; outline: none; line-height: 1.3;
+  }
+  .node-card.vacant .n-name { font-style: italic; color: #3f6b37; }
+  .node-card .n-role {
+    font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: var(--accent);
+    outline: none; margin-top: 2px; line-height: 1.3;
+  }
+  .node-card .n-note {
+    font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; color: #6b6255;
+    font-style: italic; outline: none; margin-top: 2px; line-height: 1.3;
+  }
+  .node-card .n-count {
+    font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; color: #8a8175;
+    outline: none; margin-top: 3px;
+  }
+  .node-btns {
+    display: flex; gap: 4px; justify-content: center;
+    position: absolute; bottom: 2px; left: 0; right: 0;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .node-card:hover .node-btns { opacity: 1; }
+  .node-btns button {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    border: none; background: none; cursor: pointer; font-size: 10.5px; color: #6b6255; padding: 1px 3px;
+  }
+  .node-btns button:hover { color: var(--accent); }
+
+  .legend {
+    font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; color: #6b6255;
+    margin-top: 18px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  }
+  .legend .swatch { display: inline-block; width: 11px; height: 11px; border: 1px solid var(--line); margin-right: 5px; vertical-align: -1px; }
+  .legend .swatch.v { background: var(--vacant); border-color: var(--vacant-line); }
+  .hint { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; color: #9a9186; margin-top: 6px; }
+
+  .summary-tables-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .summary-table {
+    border-collapse: collapse;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid var(--ink);
+  }
+  .summary-table th, .summary-table td {
+    border: 1px solid var(--ink);
+    padding: 4px 6px;
+    text-align: center;
+  }
+  .summary-table th {
+    background: #e4e2db;
+    font-weight: 700;
+  }
+  .summary-table .header-row th {
+    font-size: 12px;
+    background: #d5d2c7;
+    text-transform: uppercase;
+  }
+  .summary-table .total-row td {
+    font-weight: 700;
+    background: #e4e2db;
+  }
+  .summary-table td:first-child {
+    text-align: left;
+    font-weight: bold;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .metric-card {
+    background: #fff;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 8px;
+    border-top: 4px solid #1e40af;
+    text-align: left;
+  }
+  .metric-card.success { border-top-color: #10b981; }
+  .metric-card.warning { border-top-color: #f59e0b; }
+  .metric-card.accent { border-top-color: #0284c7; }
+  .metric-label { font-size: 9px; color: #6b6255; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+  .metric-value { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1; margin-bottom: 2px; }
+  .metric-sub { font-size: 9px; color: #8a8175; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    #org-root { background: #fff; padding: 0; }
+    .toolbar-actions, .tabs, .node-btns, .hint, .legend { display: none !important; }
+    .chart-scroll { overflow: visible; }
+    [contenteditable] { outline: none !important; }
+    
+    /* Ultra-compact for 1-page printing */
+    .metrics-grid { gap: 5px; margin-bottom: 10px; }
+    .metric-card { padding: 4px; border-width: 1px; }
+    .metric-value { font-size: 14px; margin-bottom: 0; }
+    .metric-label { font-size: 8px; }
+    .metric-sub { font-size: 8px; }
+    .summary-tables-container { gap: 8px; margin-top: 5px; }
+    .summary-table { font-size: 9px; border-width: 1px; }
+    .summary-table th, .summary-table td { padding: 2px 3px; border-width: 1px; }
+    .dept-meta { margin-bottom: 5px; font-size: 10px; }
+    .toolbar { margin-bottom: 5px; padding-bottom: 5px; }
+    .toolbar h1 { font-size: 14px; }
+    .toolbar .sub { font-size: 10px; }
+    .node-card { min-width: 80px !important; padding: 2px 3px; max-width: 120px !important; }
+    .node-card .n-name { font-size: 10px; }
+    .node-card .n-role, .node-card .n-note, .node-card .n-count { font-size: 8.5px; }
+    .tree ul { padding-top: 10px; }
+    .tree li { padding-top: 10px; padding-left: 2px; padding-right: 2px; }
+    .tree li::before, .tree li::after, .tree ul ul::before { height: 10px; border-width: 1.5px; }
+  }
+</style>
+
+<script>
+(function(){
+  const root = document.getElementById('org-root');
+  let uid = 1;
+  const nid = () => 'n' + (uid++);
+
+  // ---------- helpers to build nodes ----------
+  function N(name, role, opts){
+    opts = opts || {};
+    return { id: nid(), name: name, role: role || '', note: opts.note || '', count: opts.count || '',
+             vacant: !!opts.vacant, children: opts.children || [], link: opts.link || null };
+  }
+  // L: a node whose headcount is computed live from another department's tree,
+  // instead of being typed in manually. deptId = tab to pull from; matchName (optional) =
+  // only count what's under a specific box inside that tab (e.g. "Body Section" inside PDI).
+  function L(name, role, deptId, matchName){
+    return N(name, role, { link: { deptId: deptId, matchName: matchName || null, openTab: deptId } });
+  }
+
+  // ---------- dynamic counting for linked/summary nodes ----------
+  function countTree(node){
+    return 1 + (node.children || []).reduce((s,c) => s + countTree(c), 0);
+  }
+  function countChildrenOnly(node){
+    return (node.children || []).reduce((s,c) => s + countTree(c), 0);
+  }
+  function findNodeByName(node, name){
+    if (node.name && node.name.toLowerCase().indexOf(name.toLowerCase()) !== -1) return node;
+    for (const c of (node.children || [])) {
+      const r = findNodeByName(c, name);
+      if (r) return r;
+    }
+    return null;
+  }
+  function getDynamicCount(node){
+    if (node.link) {
+      if (node.link.summaryNode) return getDynamicCount(node.link.summaryNode);
+      const dept = DEPTS.find(d => d.id === node.link.deptId);
+      if (!dept) return 0;
+      if (node.link.matchName) {
+        const target = findNodeByName(dept.tree, node.link.matchName);
+        return target ? countChildrenOnly(target) : 0;
+      }
+      return countTree(dept.tree);
+    }
+    return 1 + (node.children || []).reduce((s,c) => s + getDynamicCount(c), 0);
+  }
+
+  // ===================== DATA =====================
+
+  const deptDiv1 = N("Md. Faisal Hossain", "DGM — Division 1", { children: [
+    N("Md. Salah Uddin (Nahid)", "Sr. Manager", { note: "Bogra, Noagaon, Joypurhat", children: [
+      N("Biswajit Kumar Saha", "AM"), N("Md. Baezid Hossain", "Sr. Executive"), N("Vacant", "A1-3", {vacant:true})
+    ]}),
+    N("Tutul Ahmed", "AM", { note: "Bogra, Sirajganj", children: [
+      N("Golam Rabbani", "Sr. Officer"), N("Vacant", "A7-2", {vacant:true})
+    ]}),
+    N("A.S.M. Mahbubur Rahman", "Manager", { note: "Rajshahi, Chapainawabganj", children: [
+      N("Md. A Mannan", "Sr. Executive"), N("Md. Yaman Esrat Safollo", "Officer"), N("Md. Nahidul Islam Talukdar", "Sr. Executive")
+    ]}),
+    N("Hasan Ali", "Manager", { note: "Natore, Pabna", children: [
+      N("S. M. Maminur Rashid", "Sr. Executive"), N("Md. Shah Alam", "Sr. Executive"), N("Miskatul Jan", "Executive")
+    ]}),
+    N("Md. Qumrul Hasan", "Deputy Manager", { note: "Rangpur, Lalmonirhat, Kurigram", children: [
+      N("Md. Sagor Miah", "Sr. Officer"), N("Vacant", "A4-2", {vacant:true}), N("Vacant", "A4-3", {vacant:true})
+    ]}),
+    N("Md. Shahidul Islam", "Deputy Manager", { note: "Rangpur, Nilphamari, Gaibandha", children: [
+      N("Mehdi Hasan", "Sr. Officer"), N("Md. Abdul Alim", "Officer"), N("Md. Ashik Hossain", "Sr. Officer")
+    ]}),
+    N("Shamim Reza", "Manager", { note: "Dinajpur, Thakurgaon, Panchagarh", children: [
+      N("Shimun Bari Leion", "Sr. Officer"), N("Vacant", "A6-2", {vacant:true}), N("Md. Abdur Rouf", "Sr. Officer")
+    ]}),
+    N("Md. Nur Alam", "Deputy Manager", { note: "Sylhet Division", children: [
+      N("Shahab Uddin", "Executive"), N("Md. Ashiqur Rahman", "")
+    ]}),
+    N("Md. Ataul Hai (Galib)", "Manager", { note: "Narayanganj, Narsingdi", children: [
+      N("Md. Litu Molla", "Sr. Officer"), N("Zahidul Islam", "AM"), N("Vacant", "M1-3", {vacant:true}), N("Vacant", "M1-4", {vacant:true})
+    ]}),
+    N("Md. Mahmudul Hasan", "Manager", { note: "Dhaka, Munshiganj", children: [
+      N("Md. Nymur Hasan", "Sr. Officer"), N("A. R. Ferdous", "Executive"), N("Md. Sadril Seam", "Sr. Executive"), N("Md. Inzamamul", "Sr. Executive")
+    ]}),
+  ]});
+
+  const deptDiv2 = N("Faruk Ahammed Akanda", "GM — Division 2", { children: [
+    N("Md. Abdur Rahim Mondal", "Dy Manager (B1)", { note: "Khulna", children: [
+      N("MD Mostafa", "Officer, Khulna"), N("Vacant", "Jashore", {vacant:true}), N("Vacant / Rashedul Haque", "Dy Mgr", {vacant:true})
+    ]}),
+    N("Syed Muhabub Hossain", "Manager (B2)", { note: "Jessore", children: [
+      N("MD. Al Amin", "Officer"), N("Vacant", "Satkhira", {vacant:true}), N("MD. Sofikur Rahman", "Sr. Executive")
+    ]}),
+    N("Md. Abdul Kaiyum", "Dy Manager (B3)", { note: "Faridpur", children: [
+      N("Vacant", "Faridpur", {vacant:true}), N("MD Sumon Munshi", "Executive"), N("Vacant", "Madaripur / Gopalganj", {vacant:true}),
+      N("MD Jillur Rahim Mia", "Asst. Manager"), N("Vacant", "Barisal / Bhola", {vacant:true})
+    ]}),
+    N("Md. Rafiqul Alam", "Manager (B4)", { note: "Khustia", children: [
+      N("Vacant", "Rajbari", {vacant:true}), N("MD Ibrahim Hossain", "Executive")
+    ]}),
+    N("A. B. Siddique", "Dy Manager (D1)", { note: "Chittagong Division", children: [
+      N("MD Hasan Tareq", "Asst. Manager"), N("MD Saiful Islam", "Executive"), N("Mohammad Omar Faroq", "Asst. Manager"), N("Vacant", "Chattogram", {vacant:true})
+    ]}),
+    N("Md. Roknuzzaman", "Manager (D2)", { note: "Comilla, B.Baria & Feni", children: [
+      N("Nayeeb Uddin Aziz", "Executive"), N("Al-Amin", "Executive"), N("MD Nur Islam Nahid", "Executive"), N("MD Mohi Uddin", "Sr. Exe"), N("MD Nazrul Islam", "Executive")
+    ]}),
+    N("Md. Aminul Islam", "Dy Manager (M3)", { note: "Gazipur Sadar & Joydebpur Sadar", children: [
+      N("Mithun Biswas", "Sr. Officer"), N("MD Sohel Rana", "Sr. Exe"), N("MD Ashraful Karim", "Asst. Manager"), N("Vacant", "Gazipur", {vacant:true})
+    ]}),
+  ]});
+
+  const deptDiv3 = N("K. Salahdin Al Osman", "DGM — Division 3", { children: [
+    N("Area Manager", "N-1 (7)", { children: [
+      N("N1-1","Sales Unit"), N("N1-2","Sales Unit"), N("N1-3","Sales Unit"), N("N1-4","Sales Unit"), N("N1-5","Sales Unit"), N("N1-KAM","Sales Unit")
+    ]}),
+    N("Area Manager", "N-2 (6)", { children: [
+      N("N2-1","Sales Unit"), N("N2-2","Sales Unit"), N("N2-3","Sales Unit"), N("N2-4","Sales Unit"), N("N2-KAM","Sales Unit")
+    ]}),
+    N("Area Manager", "N-3 (3)", { children: [ N("N3-1","Sales Unit"), N("N3-2","Sales Unit") ]}),
+    N("Area Manager", "N-4 (1) — KAM-PRAN"),
+    N("Area Manager", "M-2 (7)", { children: [
+      N("M2-1","Sales Unit"), N("M2-2","Sales Unit"), N("M2-3","Sales Unit"), N("M2-4","Sales Unit"), N("M2-5","Sales Unit"), N("M2-6","Sales Unit")
+    ]}),
+  ]});
+
+  const deptDiv4 = N("Ashrafuzzaman", "Divisional Manager — DIV-4", { note: "Posting: Dhaka Head Office · ID: 031434", children: [
+    N("Mobin Hossain Khan", "Area Manager, COC1", { note: "Mymensingh, Netrokuna, Sherpur & part of Tangail · ID: 031312", children: [
+      N("Shahadat Hossain", "COC1-1", { note: "Posting: Sreepur · ID 031861" }),
+      N("Alomgir Hossain", "COC1-2", { note: "Posting: Valuka · ID 031466" }),
+      N("Biplob Hossain", "COC1-3", { note: "Posting: Myn Sadar, Gouripur, Fulbari, Tarakanda, Muktagasa & Sherpur · ID 031315" }),
+    ]}),
+    N("Amin Jan Faysal", "Area Manager, COC2", { note: "Kishorganj & part of Mymensingh · ID: 030445", children: [
+      N("Shajjadul Islam", "COC2-1", { note: "Kishorganj: Sadar, Karimganj, Pakundia, Tarail, Itna, Mithamoin, Nikli, Aoshtogram, Nandail & Ishorganj · ID 031970" }),
+      N("Md. Omar Faruk", "COC2-2", { note: "Posting: Bhairab, Bajitpur, Hosenpur, Kotiadi, Kuliarchar · ID 031535" }),
+      N("(reposting)", "COC2-3", { note: "Posting: Fulpur, Haluaghat, Dhubaura & Netrokuna" }),
+    ]}),
+    N("Mirazul Ahsan", "Area Manager, COC3", { note: "Tangail & Jamalpur · ID: 030751", children: [
+      N("Lalmohon Chandra Roy", "COC3-1", { note: "Posting: Mirzapur, Nagarpur, Delduar & Bashail · ID 030454" }),
+      N("Barek Mia", "COC3-2", { note: "Posting: Tangail Sadar, Bhuapur, Kalihati · ID 032208" }),
+      N("Vacant", "COC3-3", { note: "Posting: Modhupur, Gopalpur, Ghatail & Jamalpur · Ex/Sr.Ex-01", vacant: true }),
+    ]}),
+  ]});
+
+  const deptMarketing = N("Md Motiur Rahman", "Sr. Manager, MKT", { children: [
+    N("Md. Jihan Alam", "Sr. Executive, MIS"),
+    N("Vacant", "MIS", {vacant:true}),
+    N("Sanjida Afrin Jharna", "Sr. Executive, Complaint Management"),
+    N("Md. Mokaddes Alam", "Dept. Manager, BTL & Local Purchase", { children: [
+      N("Md. Shaynur Kabir Akash", "Executive, Digital Marketing"),
+      N("Sanjib Das", "Sr. Executive, Designer"),
+      N("Md Khalid Bin Walid", "Sr. Officer, Local Purchase"),
+      N("Vacant", "BTL", {vacant:true}),
+    ]}),
+  ]});
+
+  const deptCollResale = N("HOD, Sr. Manager", "", { children: [
+    N("Manager", "Head Office"),
+    N("Dy. Manager", "Head Office", { children: [ N("Executive", "(Proposed)") ]}),
+    N("Asst. Manager", "Rangpur"),
+  ]});
+
+  const deptCVPlant = N("Head of Plant", "01 (01)", { note: "Factory Operation — 59 (43)", children: [
+    N("Plant Incharge", "CKD Operation · 01 (01)", { children: [
+      N("Production", "37 (28)"),
+      N("Logistics (Inventory)", "09 (06)", { children: [
+        N("AM / EXE", "01 (01)", { children: [
+          N("Operating Engr. / Officer", "03 (03)"),
+          N("Store Asst.", "04 (02)"),
+          N("Forklift Operator", "01 (00)"),
+        ]}),
+      ]}),
+      N("QC & Warranty & Delivery", "11 (08)", { children: [
+        N("AM / EXE", "01 (01)", { children: [
+          N("QC & WTY/UCR Management", "08 (07)", { children: [
+            N("QC Gate_01", "02 (02)", { note:"GI_QC, GR_QC, I_QC, STN 01,02_SA, STN 01,02_MA, UCR", children: [
+              N("Operating Engr. / Offcer", "02 (02)")
+            ]}),
+            N("QC Gate_02", "02 (02)", { note:"I_QC, STN03_SA & STN03,04,05_MA & UCR", children: [
+              N("Operating Engr. / Offcer", "02 (02)")
+            ]}),
+            N("QC Gate_FVI", "06 (03)", { note:"Comprehensive Veh. Testing Facilities", children: [
+              N("Operating Engr. / Offcer", "02 (01)", { children: [
+                N("Foreman", "01 (01)", { children: [
+                  N("Mech", "01 (01)", { children: [ N("Helper", "01 (00)") ]})
+                ]})
+              ]})
+            ]}),
+          ]}),
+          N("Delivery, MIS & Maintenance", "02 (00)", { children: [
+            N("Operating Engr. / Offcer", "01 (00)", { children: [
+              N("Driver_Road Test", "Mech cum driver · 01 (00)", { children: [ N("Mech", "01 (00)") ]})
+            ]})
+          ]}),
+        ]}),
+      ]}),
+      N("Admin & HR", "01 (01)", { note: "PDI support" }),
+      N("Maintenance", "00 (00)", { note: "PDI support" }),
+      N("Denting & Painting", "00 (00)", { note: "PDI / A/C support" }),
+      N("Accounts", "00 (00)"),
+      N("IT (Network, Hardware, ERP)", "00 (00)", { note: "IT support" }),
+    ]}),
+  ]});
+
+  const deptPDI = N("Sr. Manager", "01 (Tomal)", { children: [
+    N("Manager", "01 (Habib)", { children: [
+      N("PDI Bhaluka", "21", { children: [
+        N("Manager", "", { children: [
+          N("PDI & Electric Section", "12", { children: [
+            N("Sr. Executive (Mofassel)", "", { children: [
+              N("Asst. Foreman (Nizam)", "", { children: [
+                N("PDI Group 01", "", { children: [ N("Sr. Mechanic (Mamun)", "", { children:[N("Asst. Mechanic (Mostofa)","")]}) ]}),
+                N("PDI Group 02", "", { children: [ N("Jr. Asst. Foreman (Razu)", "", { children:[N("Sr. Mechanic (Taju)","")]}) ]}),
+                N("PDI Group 03", "", { children: [ N("Jr. Asst. Foreman (Kanchan)", "", { children:[N("Asst. Mechanic (Jahid)","")]}) ]}),
+                N("PDI Group 04", "", { children: [ N("Sr. Mechanic (Hafajul)", "", { children:[N("Mechanic (Sakil)","")]}) ]}),
+                N("Auto Electric Section", "02", { children: [ N("Auto Electrician (Shahin)", "", { children:[N("Asst. Auto Elec. (Sohel)","")]}) ]}),
+              ]}),
+            ]}),
+          ]}),
+          N("PDI Warranty", "01", { children: [ N("Executive", "01") ]}),
+          N("Customer Support & Delivery", "05", { children: [
+            N("Sr. Officer (Raju)", "", { children: [
+              N("Mechanic (Razib)", "", { children: [
+                N("Jr. Asst. Mechanic", "Vacant", {vacant:true, children: [
+                  N("Jr. Asst. Mechanic (Wash)", "01 Casual")
+                ]})
+              ]})
+            ]})
+          ]}),
+          N("PDI Store & Job Card Maintain", "03", { children: [
+            N("Executive (Tonmoy)", "", { children: [
+              N("Asst. Mechanic (Torab)", "", { children: [ N("Jr. Asst. Store Keeper (Shownkor)", "") ]})
+            ]})
+          ]}),
+        ]}),
+      ]}),
+      N("PDI Jashore", "17", { children: [
+        N("Manager", "01", { children: [
+          N("Sr. Executive", "01", { children: [
+            N("PDI & Delivery", "08", { children: [
+              N("Wash", "02 Casual"),
+              N("Sr. Mechanic", "01", { children: [ N("Asst. Mechanic", "01 Casual", { children:[N("Jr. Asst. Mechanic","R-01")]}) ]}),
+              N("Jr. Asst. Foreman", "01", { children: [ N("Mechanic", "01", { children:[N("Sr. Asst. Mechanic","01")]}) ]}),
+            ]}),
+            N("Receiving, Warranty, Store Paint Section", "05", { children: [
+              N("Sr. Officer", "01", { children: [
+                N("Sr. Asst. Painter", "01", { children: [
+                  N("Asst. Painter", "R-01", { children: [
+                    N("Asst. Denter", "R-01", { children: [ N("Helper", "01 Casual") ]})
+                  ]})
+                ]})
+              ]})
+            ]}),
+            N("Beanpole Receiving & Electric Section", "03", { children: [
+              N("Sr. Officer", "01", { children: [ N("Sr. Auto Electrician", "01", { children:[N("Sr. Auto Electrician","01")]}) ]})
+            ]}),
+            N("Admin & Others", "02", { children: [ N("Peon Cum Mali", "01 Casual", { children: [ N("Cook", "01 Casual") ]}) ]}),
+          ]}),
+        ]}),
+      ]}),
+      N("Paint Section", "07", { children: [
+        N("Manager", "", { children: [
+          N("Sr. Executive", "", { children: [
+            N("Paint Section (Group-1)", "04", { children: [
+              N("Sr. Painter (Alomgir)", "", { children: [
+                N("Asst. Painter (Ripon)", "", { children: [
+                  N("Asst. Painter", "Casual", { children: [ N("Jr. Asst. Painter (N.R.)", "") ]})
+                ]})
+              ]})
+            ]}),
+            N("Paint Section (Group-02)", "03", { children: [
+              N("Sr. Painter (Sddique)", "", { children: [
+                N("Painter (Emran)", "", { children: [ N("Sr. Asst. Painter (Selim Mia)", "") ]})
+              ]})
+            ]}),
+          ]}),
+        ]}),
+      ]}),
+      N("Body Section", "09", { children: [
+        N("Manager", "", { children: [
+          N("Sr. Executive (Rubel)", "", { children: [
+            N("Sr. Asst. Mechanic (Masud)", "", { children: [
+              N("Asst. Mechanic", "Vacant", {vacant:true, children: [ N("Jr. Asst. Body Mechanic", "01 Casual") ]})
+            ]}),
+            N("Jr. Asst. Foreman (Bilob)", "", { children: [
+              N("Asst. Denter (Faruk)", "", { children: [ N("Asst. Mechanic", "01 Casual") ]})
+            ]}),
+            N("Asst. Foreman (Ead Ali)", "", { children: [ N("Asst. Denter", "01 Casual") ]}),
+          ]}),
+        ]}),
+      ]}),
+    ]}),
+    N("Jashore Admin & Accounts", "03"),
+    N("Bhaluka Admin & Accounts", "15", { children: [
+      N("Sr. Manager", "", { children: [
+        N("Accounts & Admin (Sabbir)", "01", { children: [
+          N("Cook & Cleaner", "10", { children: [
+            N("Cook", "04 Casual"), N("Cleaner", "05 Casual", { children: [ N("Cleaner / Peon", "01 Casual") ]})
+          ]}),
+          N("Plant Maintenance", "04", { children: [
+            N("Sr. Electrician (Dulal)", "", { children: [
+              N("Sr. Mechanic", "01", { children: [
+                N("Jr. Asst. Electrician (Nuru)", "01", { children: [ N("Maintenance Mechanic", "01 (V)") ] })
+              ]})
+            ]})
+          ]}),
+        ]}),
+      ]}),
+    ]}),
+  ]});
+
+  const deptSalesAdmin = N("Sales Admin", "16", { children: [
+    N("Sr. Manager (01) — Mokhles", "", { children: [
+      N("Registration / Route Permit", "5", { note: "Insurance, CTG, BSP Data, Advanced bill, Bank", children: [
+        N("DM/Manager — Hafiz", "01", { children: [
+          N("Officer — Mahbub","01"), N("Sr. Officer — Santo","01"), N("Sr. Exe — Alim","01"), N("Sr. Exe — Aman","01")
+        ]}),
+      ]}),
+      N("Ownership Transfer / Renewal", "4", { note: "DNP, Corporate sales, CKD Approval, Out of Dhaka, Equria/BRTA, Type approval", children: [
+        N("DM — Jumman", "01", { children: [
+          N("Officer — Masud","01"), N("Exe — Soyeb","01"), N("Sr. Exe — Ranjan","01")
+        ]}),
+      ]}),
+      N("Vehicles Requirement / Movement", "3", { note: "Bank file, Shadow file, vehicle stock, Delivery challan, Transfer, Driver force", children: [
+        N("AM/DM — Sonya", "01", { children: [
+          N("Sr. Exe — Tumpa","01"), N("Sr. Exe — Zerin","01")
+        ]}),
+      ]}),
+      N("Delivery / Name Transfer", "3", { note: "Used vehicles movement, Carrying bill", children: [
+        N("AM/DM — Masud", "01", { children: [
+          N("Sr. Exe — Shajia","01"), N("Sr. Exe — Nazrul","01")
+        ]}),
+      ]}),
+    ]}),
+  ]});
+
+  const deptTechSupport = N("Technical Support & Training", "Team", { children: [
+    N("Technical Support Officer", ""), N("Training Officer", ""),
+  ]});
+
+  const deptSpecialTask = N("Special Task Manager", "", { children: [
+    N("Special Task Officer", ""),
+  ]});
+
+  // Sales Department summary (RUNNER MOTORS PLC — Sales Department Organogram):
+  const salesDeptSummary = N("HOD. MD. FEROZ KABIR SR. GM", "", { children: [
+    L("DIV-1. (41)", "MD. FAISAL HOSSAIN DGM", 'div1'),
+    L("DIV-2. (34)", "FARUK AHAMMED AKANDA GM", 'div2'),
+    L("DIV-3. (25)", "K. SALAHDIN AL OSMAN DGM", 'div3'),
+    L("RIG-1. (13)", "ASHRAFUZZAMAN AGM", 'div4'),
+    L("TECHNICAL SUPPORT & TRAINING (3)", "", 'techsupport'),
+    L("SPECIAL TASK (2)", "MANAGER", 'specialtask'),
+    L("COLLECTION & RESALE (6)", "", 'collresale'),
+  ]});
+
+  // Sales & Supporting Department summary (top-of-house view).
+  const salesSupportSummary = N("VICE CHAIRMAN", "", { children: [
+    N("HOD", "(283)", { children: [
+      N("SALES", "(125)", { link: { summaryNode: salesDeptSummary, openTab: 'salessummary' } }),
+      L("MARKETING", "(9)", 'marketing'),
+      L("SALE ADMIN", "(16)", 'salesadmin'),
+      L("PDI", "(65)", 'pdi'),
+      L("BODY MAKING", "(9)", 'pdi', 'Body Section'),
+      L("CKD", "(59)", 'cvplant'),
+    ]}),
+  ]});
+
+  let DEPTS = [
+    { id:'salessupport', label:'⭐ Sales & Support Summary', meta:'Runner Motors PLC — Sales & Supporting Department Organogram · totals below are calculated live from every department tab', tree: salesSupportSummary, isSummary: true },
+    { id:'salessummary', label:'⭐ Sales Dept Summary', meta:'Runner Motors PLC — Sales Department Organogram · totals below are calculated live from Division 1–4/RIG-1, Tech Support, Special Task & Collection and Resale tabs', tree: salesDeptSummary, isSummary: true },
+    { id:'div1', label:'Division 1', meta:'RMPLC Division 01 Organogram · FY 2026-27', tree: deptDiv1 },
+    { id:'div2', label:'Division 2', meta:'RMPLC Division 02 Organogram · FY 2026-27 (some names from handwritten notes — please verify)', tree: deptDiv2 },
+    { id:'div3', label:'Division 3', meta:'DIV-3 Organogram FY 2026-27 · Div Manager 1, Area Manager 5 (4 existing, 1 short), Sales Units 19 proposed (10 existing, 8 short)', tree: deptDiv3 },
+    { id:'div4', label:'Division 4 / RIG-1', meta:'DIV-4 Manpower (formerly RIG-1) · Existing 12 of 13 proposed, 1 vacant (COC3-3, to be filled before FY26-27)', tree: deptDiv4 },
+    { id:'techsupport', label:'Technical Support & Training', meta:'Technical Support & Training team — add/rename positions here; feeds the Sales Dept summary', tree: deptTechSupport },
+    { id:'specialtask', label:'Special Task', meta:'Special Task team — add/rename positions here; feeds the Sales Dept summary', tree: deptSpecialTask },
+    { id:'salesadmin', label:'Sales Admin', meta:'Sales Admin Organizational Chart 2026/2027 · 16 headcount (approved 2025/26 = 16, proposed 2026/27 = 16)', tree: deptSalesAdmin },
+    { id:'marketing', label:'Marketing', meta:'Marketing Department Organogram FY 2026-27 · Approved 9, Existing 7, Short 2, Proposed 9, Required 2', tree: deptMarketing },
+    { id:'collresale', label:'Collection & Resale', meta:'Collection & Resale Department Organogram 2026-27 · Total proposed 6, existing 5, short 1 (new Executive, Head Office)', tree: deptCollResale },
+    { id:'cvplant', label:'CV Assembly & Mfg Plant', meta:'Commercial Vehicle Assembly & Manufacturing Plant, Bhaluka, Mymensingh · Organogram FY 2026-27 · Factory Operation 59 proposed (43 existing, ~14 short)', tree: deptCVPlant },
+    { id:'pdi', label:'PDI, Body Fab & Painting', meta:'PDI, Body Fabrication & Painting Section, Runner Motors Ltd. · Organization Chart 2026-2027 · Total proposed 74, existing 67 (PDI Bhaluka 22/21, Admin 16/15, PDI Jashore 20/17, Body Fabrication 9/8, Painting 7/6)', tree: deptPDI },
+  ];
+
+  try {
+    const saved = localStorage.getItem('rml_org_depts');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const salesSumTree = parsed.find(d => d.id === 'salessummary')?.tree;
+      const supportTree = parsed.find(d => d.id === 'salessupport')?.tree;
+      if (salesSumTree && supportTree && supportTree.children && supportTree.children[0] && supportTree.children[0].children[0] && supportTree.children[0].children[0].link) {
+        supportTree.children[0].children[0].link.summaryNode = salesSumTree;
+      }
+      DEPTS = parsed;
+    }
+    const savedTheme = localStorage.getItem('rml_org_theme');
+    if (savedTheme) {
+      const t = JSON.parse(savedTheme);
+      if(t.w) root.style.setProperty('--node-w', t.w);
+      if(t.f) root.style.setProperty('--font-mult', t.f);
+      if(t.bg) root.style.setProperty('--box-bg', t.bg);
+      if(t.ink) root.style.setProperty('--ink', t.ink);
+      if(t.vac) root.style.setProperty('--vacant', t.vac);
+      if(t.line) root.style.setProperty('--line', t.line);
+      if(t.paper) root.style.setProperty('--paper', t.paper);
+    }
+  } catch(e) { console.error('Failed to restore local save:', e); }
+
+  let activeDept = 0;
+
+  // ---------- tree utilities ----------
+  function findNode(node, id){
+    if (node.id === id) return node;
+    for (const c of node.children){
+      const r = findNode(c, id);
+      if (r) return r;
+    }
+    return null;
+  }
+  function findParent(node, id, parent){
+    if (node.id === id) return parent;
+    for (const c of node.children){
+      const r = findParent(c, id, node);
+      if (r !== undefined && r !== null) return r;
+    }
+    return null;
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  let isFitScreen = true;
+
+  function autoFitFonts() {
+    const fontMult = parseFloat(getComputedStyle(root).getPropertyValue('--font-mult')) || 1;
+    root.querySelectorAll('.node-card').forEach(card => {
+      const texts = card.querySelectorAll('[contenteditable="true"]');
+      texts.forEach(t => {
+        if (!t.dataset.origSize) {
+          t.dataset.origSize = window.getComputedStyle(t).fontSize;
+        }
+        t.style.fontSize = (parseFloat(t.dataset.origSize) * fontMult) + 'px';
+      });
+      
+      let attempts = 0;
+      while (card.scrollHeight > card.clientHeight && attempts < 15) {
+        texts.forEach(t => {
+          let current = parseFloat(t.style.fontSize);
+          if (current > 7) {
+            t.style.fontSize = (current - 0.5) + 'px';
+          }
+        });
+        attempts++;
+      }
+    });
+  }
+
+  function renderNode(node, isRoot, depth = 0){
+    const vacantClass = node.vacant ? ' vacant' : '';
+    const isDiv = ['div1', 'div2', 'div3', 'div4'].includes(DEPTS[activeDept].id);
+    const ulClass = (isDiv && depth >= 1) ? ' class="vertical"' : '';
+    return `
+      <li>
+        <div class="node-card${vacantClass}" data-id="${node.id}">
+          <span class="n-name" contenteditable="true" data-field="name" data-id="${node.id}">${escapeHtml(node.name)}</span>
+          ${node.role || true ? `<span class="n-role" contenteditable="true" data-field="role" data-id="${node.id}">${escapeHtml(node.role)}</span>` : ''}
+          ${node.note ? `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}">${escapeHtml(node.note)}</span>` : `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" style="display:none"></span>`}
+          <span class="node-btns">
+            <button data-action="toggle-vacant" data-id="${node.id}" title="Toggle vacant">${node.vacant ? '✓ filled' : '○ vacant'}</button>
+            <button data-action="add-child" data-id="${node.id}" title="Add report">+ report</button>
+            <button data-action="add-note" data-id="${node.id}" title="Add note line">+ note</button>
+            ${!isRoot ? `<button data-action="remove-node" data-id="${node.id}" title="Remove">🗑</button>` : ''}
+          </span>
+        </div>
+        ${node.children && node.children.length ? `<ul${ulClass}>${node.children.map(c => renderNode(c, false, depth + 1)).join('')}</ul>` : ''}
+      </li>
+    `;
+  }
+
+  function updateLiveCounts() {
+    function countSubtree(n) {
+      if (n.noCount) return 0;
+      let c = 1;
+      (n.children || []).forEach(child => { c += countSubtree(child); });
+      return c;
+    }
+    function getTargetCount(deptId, matchName) {
+      const targetDept = DEPTS.find(d => d.id === deptId);
+      if (!targetDept) return 0;
+      let targetNode = targetDept.tree;
+      if (matchName) {
+        const q = [targetNode];
+        targetNode = null;
+        while(q.length){
+          const curr = q.shift();
+          if (curr.name === matchName) { targetNode = curr; break; }
+          (curr.children || []).forEach(c => q.push(c));
+        }
+      }
+      return targetNode ? countSubtree(targetNode) : 0;
+    }
+    function updateNode(node) {
+      let count = null;
+      if (node.link && node.link.deptId) {
+        count = getTargetCount(node.link.deptId, node.link.matchName);
+      } else if (node.name === 'SALES' && node.link && node.link.summaryNode) {
+        count = getTargetCount('salessummary');
+      }
+      if (count !== null) {
+        const regex = /\(\d+\)/;
+        if (node.role && regex.test(node.role)) {
+          node.role = node.role.replace(regex, `(${count})`);
+        } else if (node.name && regex.test(node.name)) {
+          node.name = node.name.replace(regex, `(${count})`);
+        }
+      }
+      (node.children || []).forEach(updateNode);
+    }
+    
+    const topSum = DEPTS.find(d => d.id === 'salessupport');
+    if (topSum) {
+      updateNode(topSum.tree);
+      let total = 0;
+      ['div1','div2','div3','div4','techsupport','specialtask','collresale','marketing','salesadmin','pdi','cvplant'].forEach(id => {
+        total += getTargetCount(id);
+      });
+      const hodNode = topSum.tree.children[0];
+      if (hodNode && hodNode.role && /\(\d+\)/.test(hodNode.role)) {
+        hodNode.role = hodNode.role.replace(/\(\d+\)/, `(${total})`);
+      }
+    }
+    
+    const sSum = DEPTS.find(d => d.id === 'salessummary');
+    if (sSum) {
+      updateNode(sSum.tree);
+    }
+  }
+
+  function autoSaveLocal() {
+    const deptsStr = JSON.stringify(DEPTS);
+    localStorage.setItem('rml_org_depts', deptsStr);
+    const rs = getComputedStyle(root);
+    const themeObj = {
+      w: rs.getPropertyValue('--node-w').trim(),
+      f: rs.getPropertyValue('--font-mult').trim(),
+      bg: rs.getPropertyValue('--box-bg').trim(),
+      ink: rs.getPropertyValue('--ink').trim(),
+      vac: rs.getPropertyValue('--vacant').trim(),
+      line: rs.getPropertyValue('--line').trim(),
+      paper: rs.getPropertyValue('--paper').trim()
+    };
+    const themeStr = JSON.stringify(themeObj);
+    localStorage.setItem('rml_org_theme', themeStr);
+    
+    if (window.firebase && firebase.database) {
+      firebase.database().ref('organogram').set({
+        depts: deptsStr,
+        theme: themeStr
+      });
+    }
+  }
+
+  function render(fromRemote = false){
+    if (!fromRemote) {
+      updateLiveCounts();
+      autoSaveLocal();
+    }
+    const dept = DEPTS[activeDept];
+    root.innerHTML = `
+      <div class="toolbar">
+        <div>
+          <h1>Runner Motors — Department Organograms</h1>
+          <div class="sub">FY 2026-27 · click any text to edit · hover a box for controls</div>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn ${isFitScreen ? 'primary' : ''}" data-action="toggle-fit">Fit Screen</button>
+          <button class="btn" data-action="zoom-out">Box -</button>
+          <button class="btn" data-action="zoom-in">Box +</button>
+          <button class="btn" data-action="theme">🎨 Formatting</button>
+          <button class="btn primary" data-action="save">💾 Save Progress</button>
+          <button class="btn" data-action="print">Print / Save PDF</button>
+          <button class="btn primary" data-action="export">Export JSON</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        ${DEPTS.map((d,i) => `<button class="tab-btn ${i===activeDept?'active':''}" data-action="switch-tab" data-idx="${i}">${escapeHtml(d.label)}</button>`).join('')}
+      </div>
+
+      <div class="dept-meta"><b>${escapeHtml(dept.label)}</b> — ${escapeHtml(dept.meta)}</div>
+
+      ${renderSummaryTables(dept.id)}
+      <div class="chart-scroll ${!dept.isSummary ? 'standard-view' : 'summary-view'}">
+        <div class="tree">
+          <ul>
+            ${renderNode(dept.tree, true)}
+          </ul>
+        </div>
+      </div>
+      
+      ${renderDivStatsTable(dept)}
+
+      <div class="legend">
+        <span><span class="swatch v"></span>Vacant position</span>
+        <span><span class="swatch"></span>Filled position</span>
+      </div>
+      <div class="hint">Tip: click any name / role / note to edit directly. Use "+ report" to add someone under a box, "🗑" to remove a box (and everyone under it), "○/✓" to mark a seat vacant.</div>
+    `;
+    attachHandlers();
+
+    setTimeout(() => {
+      autoFitFonts();
+      
+      const tree = root.querySelector('.tree');
+      const scroll = root.querySelector('.chart-scroll');
+      if (tree && scroll) {
+        if (isFitScreen && !dept.isSummary) {
+          const sw = scroll.clientWidth;
+          const tw = tree.scrollWidth;
+          if (tw > sw && sw > 0) {
+            const scale = sw / (tw + 40);
+            tree.style.transform = `scale(${scale})`;
+            tree.style.transformOrigin = 'top center';
+          } else {
+            tree.style.transform = 'none';
+          }
+        } else {
+          tree.style.transform = 'none';
+        }
+      }
+    }, 10);
+  }
+
+  function getCounts(dId) {
+    let counts = { divMgr: 0, am: 0, su: 0 };
+    const dObj = DEPTS.find(d => d.id === dId);
+    if (!dObj) return counts;
+
+    function traverse(node, depth) {
+      if (node.noCount) return;
+      if (dId.startsWith('div')) {
+        if (depth === 0) counts.divMgr++;
+        else if (depth === 1) counts.am++;
+        else counts.su++;
+      } else if (dId === 'techsupport' || dId === 'specialtask') {
+        counts.am++;
+      } else if (dId === 'collresale') {
+        if (depth <= 2) counts.am++;
+        else counts.su++;
+      }
+      (node.children || []).forEach(c => traverse(c, depth + 1));
+    }
+    traverse(dObj.tree, 0);
+    return counts;
+  }
+
+  function renderSummaryTables(deptId) {
+    const d1 = getCounts('div1');
+    const d2 = getCounts('div2');
+    const d3 = getCounts('div3');
+    const d4 = getCounts('div4');
+    const ts = getCounts('techsupport');
+    const st = getCounts('specialtask');
+    const cr = getCounts('collresale');
+
+    const totDivMgr = d1.divMgr + d2.divMgr + d3.divMgr + d4.divMgr + ts.divMgr + st.divMgr + cr.divMgr;
+    const totAm = d1.am + d2.am + d3.am + d4.am + ts.am + st.am + cr.am;
+    const totSu = d1.su + d2.su + d3.su + d4.su + ts.su + st.su + cr.su;
+    const grand = 1 + totDivMgr + totAm + totSu; // +1 for HOD
+
+    const d1T = d1.divMgr + d1.am + d1.su;
+    const d2T = d2.divMgr + d2.am + d2.su;
+    const d3T = d3.divMgr + d3.am + d3.su;
+    const d4T = d4.divMgr + d4.am + d4.su;
+    const tsT = ts.divMgr + ts.am + ts.su;
+    const stT = st.divMgr + st.am + st.su;
+    const crT = cr.divMgr + cr.am + cr.su;
+
+    if (deptId === 'salessupport') {
+      const overallTotal = 158 + grand; // 158 from other non-sales departments (9+16+65+9+59)
+      const shortfall = (overallTotal - 230); // 230 existing is static
+      const salesShortfall = grand - 95; // 95 existing is static
+
+      return `
+        <div class="metrics-grid">
+          <div class="metric-card"><div class="metric-label">Total Proposed Headcount</div><div class="metric-value">${overallTotal}</div><div class="metric-sub">Auto-Calculated Target</div></div>
+          <div class="metric-card success"><div class="metric-label">Existing Staff</div><div class="metric-value">230</div><div class="metric-sub">Currently Active</div></div>
+          <div class="metric-card warning"><div class="metric-label">Shortfall / Required</div><div class="metric-value">${shortfall}</div><div class="metric-sub">Vacancies / New Posts</div></div>
+          <div class="metric-card accent"><div class="metric-label">Sales Dept Proposed</div><div class="metric-value">${grand}</div><div class="metric-sub">${((grand/overallTotal)*100).toFixed(1)}% of Total Headcount</div></div>
+        </div>
+        <div class="summary-tables-container">
+          <table class="summary-table">
+            <thead>
+              <tr class="header-row">
+                <th colspan="7">Sales & Supporting Department Organogram Summary (FY 2026-27)</th>
+              </tr>
+              <tr>
+                <th>TEAM / Department</th>
+                <th>FY 24-25 Approved</th>
+                <th>FY 25-26 Proposed</th>
+                <th>FY 26-27 Existing</th>
+                <th>FY 26-27 Shortfall</th>
+                <th>FY 26-27 Proposed</th>
+                <th>Remarks & Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Sales Department</td><td>95</td><td>113</td><td>95</td><td>${salesShortfall}</td><td>${grand}</td><td>Divisions 1-4, Tec Support, Special Task &amp; Collection &amp; Resale</td></tr>
+              <tr><td>Marketing Department</td><td>9</td><td>9</td><td>7</td><td>2</td><td>9</td><td>1 Sr. Mgr, 1 Dept Mgr, 2 Vacancies (MIS, BTL)</td></tr>
+              <tr><td>Sales Admin</td><td>16</td><td>16</td><td>16</td><td>0</td><td>16</td><td>4 Functional Wings under Sr. Manager (Mokhles)</td></tr>
+              <tr><td>PDI &amp; Painting</td><td>62</td><td>62</td><td>59</td><td>6</td><td>65</td><td>PDI Bhaluka (22), PDI Jashore (20), Admin (16), Painting (7)</td></tr>
+              <tr><td>Body Making</td><td>10</td><td>10</td><td>8</td><td>1</td><td>9</td><td>1 Sr. Exe, 5 Techs/Foreman, 3 Casual staff</td></tr>
+              <tr><td>CKD (Assembly Plant)</td><td>49</td><td>54</td><td>45</td><td>14</td><td>59</td><td>Production (37), QC/Wty (11), Logistics (9), Admin (2)</td></tr>
+              <tr class="total-row"><td>TOTAL</td><td>241</td><td>264</td><td>230</td><td>${shortfall}</td><td>${overallTotal}</td><td>Grand Total Headcount: ${overallTotal}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    if (deptId === 'salessummary') {
+      return `
+        <div class="summary-tables-container">
+          <table class="summary-table">
+            <thead>
+              <tr class="header-row">
+                <th colspan="9">Sales Department Designation Matrix (FY 2026-27 Proposed)</th>
+              </tr>
+              <tr>
+                <th>Designation</th>
+                <th>DIV-1</th>
+                <th>DIV-2</th>
+                <th>DIV-3</th>
+                <th>RIG-1</th>
+                <th>Tec. Support</th>
+                <th>Special Task</th>
+                <th>Collection &amp; Resale</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>HOD (Sr. GM)</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>1</td></tr>
+              <tr><td>DIV / RIG Manager</td><td>${d1.divMgr || '-'}</td><td>${d2.divMgr || '-'}</td><td>${d3.divMgr || '-'}</td><td>${d4.divMgr || '-'}</td><td>${ts.divMgr || '-'}</td><td>${st.divMgr || '-'}</td><td>${cr.divMgr || '-'}</td><td>${totDivMgr}</td></tr>
+              <tr><td>Area Manager</td><td>${d1.am || '-'}</td><td>${d2.am || '-'}</td><td>${d3.am || '-'}</td><td>${d4.am || '-'}</td><td>${ts.am || '-'}</td><td>${st.am || '-'}</td><td>${cr.am || '-'}</td><td>${totAm}</td></tr>
+              <tr><td>Sales Units</td><td>${d1.su || '-'}</td><td>${d2.su || '-'}</td><td>${d3.su || '-'}</td><td>${d4.su || '-'}</td><td>${ts.su || '-'}</td><td>${st.su || '-'}</td><td>${cr.su || '-'}</td><td>${totSu}</td></tr>
+              <tr class="total-row"><td>TOTAL</td><td>${d1T}</td><td>${d2T}</td><td>${d3T}</td><td>${d4T}</td><td>${tsT}</td><td>${stT}</td><td>${crT}</td><td>${grand}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    return '';
+  }
+
+  function attachHandlers(){
+    root.querySelectorAll('[contenteditable]').forEach(el => {
+      el.addEventListener('blur', onEditBlur);
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    });
+    root.querySelectorAll('button[data-action]').forEach(el => el.addEventListener('click', onButtonClick));
+  }
+
+  function renderDivStatsTable(dept) {
+    if (!['div1', 'div2', 'div3', 'div4'].includes(dept.id)) return '';
+    if (!dept.stats) {
+      dept.stats = {
+        mgr: { a1: '', e1: '', p2: '', e2: '' },
+        am:  { a1: '', e1: '', p2: '', e2: '' },
+        su:  { a1: '', e1: '', p2: '', e2: '' }
+      };
+    }
+    const s = dept.stats;
+    const s1_mgr = (parseFloat(s.mgr.a1)||0) - (parseFloat(s.mgr.e1)||0);
+    const s2_mgr = (parseFloat(s.mgr.p2)||0) - (parseFloat(s.mgr.e2)||0);
+    const s1_am  = (parseFloat(s.am.a1)||0) - (parseFloat(s.am.e1)||0);
+    const s2_am  = (parseFloat(s.am.p2)||0) - (parseFloat(s.am.e2)||0);
+    const s1_su  = (parseFloat(s.su.a1)||0) - (parseFloat(s.su.e1)||0);
+    const s2_su  = (parseFloat(s.su.p2)||0) - (parseFloat(s.su.e2)||0);
+
+    const t_a1 = (parseFloat(s.mgr.a1)||0) + (parseFloat(s.am.a1)||0) + (parseFloat(s.su.a1)||0);
+    const t_e1 = (parseFloat(s.mgr.e1)||0) + (parseFloat(s.am.e1)||0) + (parseFloat(s.su.e1)||0);
+    const t_s1 = s1_mgr + s1_am + s1_su;
+    const t_p2 = (parseFloat(s.mgr.p2)||0) + (parseFloat(s.am.p2)||0) + (parseFloat(s.su.p2)||0);
+    const t_e2 = (parseFloat(s.mgr.e2)||0) + (parseFloat(s.am.e2)||0) + (parseFloat(s.su.e2)||0);
+    const t_s2 = s2_mgr + s2_am + s2_su;
+
+    const title = "DIV-" + dept.id.replace('div','');
+
+    return `
+      <div class="div-stats-overlay">
+        <table class="div-stats-table">
+          <thead>
+            <tr>
+              <th rowspan="2">${title}</th>
+              <th colspan="3">FY-25-26</th>
+              <th colspan="3">FY-26-27</th>
+            </tr>
+            <tr>
+              <th>APPRO</th><th>EXIS</th><th>SHORT</th>
+              <th>PROPO</th><th>EXIS</th><th>SHORT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>DIV / RIG MGR</th>
+              <td contenteditable="true" data-stat="mgr.a1">${s.mgr.a1}</td>
+              <td contenteditable="true" data-stat="mgr.e1">${s.mgr.e1}</td>
+              <td>${s1_mgr}</td>
+              <td contenteditable="true" data-stat="mgr.p2">${s.mgr.p2}</td>
+              <td contenteditable="true" data-stat="mgr.e2">${s.mgr.e2}</td>
+              <td>${s2_mgr}</td>
+            </tr>
+            <tr>
+              <th>AREA MANAGER</th>
+              <td contenteditable="true" data-stat="am.a1">${s.am.a1}</td>
+              <td contenteditable="true" data-stat="am.e1">${s.am.e1}</td>
+              <td>${s1_am}</td>
+              <td contenteditable="true" data-stat="am.p2">${s.am.p2}</td>
+              <td contenteditable="true" data-stat="am.e2">${s.am.e2}</td>
+              <td>${s2_am}</td>
+            </tr>
+            <tr>
+              <th>SALES UNITS</th>
+              <td contenteditable="true" data-stat="su.a1">${s.su.a1}</td>
+              <td contenteditable="true" data-stat="su.e1">${s.su.e1}</td>
+              <td>${s1_su}</td>
+              <td contenteditable="true" data-stat="su.p2">${s.su.p2}</td>
+              <td contenteditable="true" data-stat="su.e2">${s.su.e2}</td>
+              <td>${s2_su}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th>TOTAL</th>
+              <th>${t_a1}</th><th>${t_e1}</th><th>${t_s1}</th>
+              <th>${t_p2}</th><th>${t_e2}</th><th>${t_s2}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    `;
+  }
+
+  function onEditBlur(e){
+    const el = e.target;
+    
+    // Division Stats editing
+    const statField = el.dataset.stat;
+    if (statField) {
+      const parts = statField.split('.');
+      if (!DEPTS[activeDept].stats) {
+        DEPTS[activeDept].stats = {
+          mgr: { a1: '', e1: '', p2: '', e2: '' },
+          am:  { a1: '', e1: '', p2: '', e2: '' },
+          su:  { a1: '', e1: '', p2: '', e2: '' }
+        };
+      }
+      DEPTS[activeDept].stats[parts[0]][parts[1]] = el.textContent.trim();
+      render();
+      return;
+    }
+
+    const id = el.dataset.id;
+    const field = el.dataset.field;
+    const text = el.textContent.trim();
+    const node = findNode(DEPTS[activeDept].tree, id);
+    if (!node) return;
+    if (field === 'name') {
+      node.name = text;
+      if (text.toLowerCase() === 'vacant') node.vacant = true;
+      render();
+    } else if (field === 'role') {
+      node.role = text;
+      render();
+    } else if (field === 'note') {
+      node.note = text;
+      render();
+    }
+  }
+
+  function onButtonClick(e){
+    const el = e.currentTarget;
+    const action = el.dataset.action;
+
+    if (action === 'toggle-fit') {
+      isFitScreen = !isFitScreen;
+      render();
+      return;
+    }
+    if (action === 'zoom-in') {
+      const current = parseInt(getComputedStyle(root).getPropertyValue('--node-w')) || 120;
+      root.style.setProperty('--node-w', Math.min(300, current + 15) + 'px');
+      return;
+    }
+    if (action === 'zoom-out') {
+      const current = parseInt(getComputedStyle(root).getPropertyValue('--node-w')) || 120;
+      root.style.setProperty('--node-w', Math.max(80, current - 15) + 'px');
+      return;
+    }
+
+    if (action === 'switch-tab') {
+      activeDept = parseInt(el.dataset.idx, 10);
+      render();
+      return;
+    }
+    if (action === 'theme') {
+      const rs = getComputedStyle(root);
+      const hex = v => {
+        let h = rs.getPropertyValue(v).trim();
+        if(h.length === 4) h = '#' + h[1]+h[1] + h[2]+h[2] + h[3]+h[3];
+        return h;
+      };
+      document.getElementById('inp-w').value = parseFloat(rs.getPropertyValue('--node-w')) || 120;
+      document.getElementById('inp-f').value = parseFloat(rs.getPropertyValue('--font-mult')) || 1;
+      document.getElementById('inp-bg').value = hex('--box-bg') || '#ffffff';
+      document.getElementById('inp-ink').value = hex('--ink') || '#1c2530';
+      document.getElementById('inp-vac').value = hex('--vacant') || '#b7dfb0';
+      document.getElementById('inp-line').value = hex('--line') || '#c9c2b4';
+      document.getElementById('inp-paper').value = hex('--paper') || '#f6f5f1';
+      document.getElementById('theme-dialog').showModal();
+      return;
+    }
+    if (action === 'save') {
+      localStorage.setItem('rml_org_depts', JSON.stringify(DEPTS));
+      const rs = getComputedStyle(root);
+      localStorage.setItem('rml_org_theme', JSON.stringify({
+        w: rs.getPropertyValue('--node-w').trim(),
+        f: rs.getPropertyValue('--font-mult').trim(),
+        bg: rs.getPropertyValue('--box-bg').trim(),
+        ink: rs.getPropertyValue('--ink').trim(),
+        vac: rs.getPropertyValue('--vacant').trim(),
+        line: rs.getPropertyValue('--line').trim(),
+        paper: rs.getPropertyValue('--paper').trim()
+      }));
+      alert("Changes saved locally! Next time you open this file in this browser, your changes will be loaded automatically.");
+      return;
+    }
+    if (action === 'print') { window.print(); return; }
+    if (action === 'export') {
+      const dataStr = JSON.stringify(DEPTS[activeDept].tree, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = DEPTS[activeDept].id + '_organogram.json'; a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    const id = el.dataset.id;
+    const tree = DEPTS[activeDept].tree;
+    const node = findNode(tree, id);
+    if (!node) return;
+
+    if (action === 'toggle-vacant') {
+      node.vacant = !node.vacant;
+      render();
+    } else if (action === 'add-child') {
+      node.children.push(N('New Position', ''));
+      render();
+    } else if (action === 'add-note') {
+      if (!node.note) node.note = 'note';
+      render();
+    } else if (action === 'remove-node') {
+      if (confirm('Remove this box and everyone reporting under it?')) {
+        const parent = findParent(tree, id, null);
+        if (parent) {
+          parent.children = parent.children.filter(c => c.id !== id);
+          render();
+        }
+      }
+    }
+  }
+
+  const dialogHtml = `
+    <dialog id="theme-dialog" class="theme-dialog">
+      <h3>Formatting Options</h3>
+      <div class="form-group"><label>Box Width (px)</label><input type="number" id="inp-w"></div>
+      <div class="form-group"><label>Font Size Multiplier</label><input type="number" step="0.1" id="inp-f"></div>
+      <div class="form-group"><label>Filled Box Background</label><input type="color" id="inp-bg"></div>
+      <div class="form-group"><label>Text & Border Color</label><input type="color" id="inp-ink"></div>
+      <div class="form-group"><label>Vacant Box Background</label><input type="color" id="inp-vac"></div>
+      <div class="form-group"><label>Connecting Lines</label><input type="color" id="inp-line"></div>
+      <div class="form-group"><label>Page Background</label><input type="color" id="inp-paper"></div>
+      <div class="dialog-btns">
+        <button class="btn" onclick="document.getElementById('theme-dialog').close()">Close</button>
+        <button class="btn primary" id="btn-apply-theme">Apply</button>
+      </div>
+    </dialog>
+  `;
+  document.body.insertAdjacentHTML('beforeend', dialogHtml);
+
+  document.getElementById('btn-apply-theme').addEventListener('click', () => {
+    root.style.setProperty('--node-w', document.getElementById('inp-w').value + 'px');
+    root.style.setProperty('--font-mult', document.getElementById('inp-f').value);
+    root.style.setProperty('--box-bg', document.getElementById('inp-bg').value);
+    root.style.setProperty('--ink', document.getElementById('inp-ink').value);
+    root.style.setProperty('--vacant', document.getElementById('inp-vac').value);
+    root.style.setProperty('--line', document.getElementById('inp-line').value);
+    root.style.setProperty('--paper', document.getElementById('inp-paper').value);
+    document.getElementById('theme-dialog').close();
+    render();
+  });
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgkPPaLehP1n3vNfQBxHrQJzqu7zqMCxw",
+    authDomain: "rmplc-organogram--26-27.firebaseapp.com",
+    databaseURL: "https://rmplc-organogram--26-27-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "rmplc-organogram--26-27",
+    storageBucket: "rmplc-organogram--26-27.firebasestorage.app",
+    messagingSenderId: "420074217307",
+    appId: "1:420074217307:web:87cc8dc62c50abde28447e",
+    measurementId: "G-2CLN2L8CFC"
+  };
+
+  if (window.firebase) {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    db.ref('organogram').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return; // If empty, our first autoSaveLocal will populate it
+      
+      const currentDeptsStr = JSON.stringify(DEPTS);
+      if (data.depts === currentDeptsStr) return; // Ignore our own echo
+      
+      if (data.depts) {
+        try {
+          const parsed = JSON.parse(data.depts);
+          const salesSumTree = parsed.find(d => d.id === 'salessummary')?.tree;
+          const supportTree = parsed.find(d => d.id === 'salessupport')?.tree;
+          if (salesSumTree && supportTree && supportTree.children && supportTree.children[0] && supportTree.children[0].children[0] && supportTree.children[0].children[0].link) {
+            supportTree.children[0].children[0].link.summaryNode = salesSumTree;
+          }
+          DEPTS = parsed;
+        } catch(e) {}
+      }
+      
+      if (data.theme) {
+        try {
+          const t = JSON.parse(data.theme);
+          if(t.w) root.style.setProperty('--node-w', t.w);
+          if(t.f) root.style.setProperty('--font-mult', t.f);
+          if(t.bg) root.style.setProperty('--box-bg', t.bg);
+          if(t.ink) root.style.setProperty('--ink', t.ink);
+          if(t.vac) root.style.setProperty('--vacant', t.vac);
+          if(t.line) root.style.setProperty('--line', t.line);
+          if(t.paper) root.style.setProperty('--paper', t.paper);
+        } catch(e) {}
+      }
+      
+      render(true); // Render from remote, don't trigger autoSaveLocal
+    });
+  }
+
+  render();
+})();
+</script>

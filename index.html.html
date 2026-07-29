@@ -22,13 +22,25 @@
   #org-root * { box-sizing: border-box; }
 
   .div-stats-overlay {
-    display: inline-block;
-    margin-top: 30px;
-    margin-bottom: 30px;
+    position: absolute;
+    left: var(--stats-x, 20px);
+    top: var(--stats-y, 80px);
     z-index: 1000;
     background: #fff;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     border: 1px solid #000;
+  }
+  .drag-handle {
+    background: #f7b78b;
+    cursor: move;
+    padding: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid #000;
+    font-family: sans-serif;
+    user-select: none;
+    color: #000;
   }
   .div-stats-table {
     border-collapse: collapse;
@@ -729,6 +741,8 @@
       if(t.vac) root.style.setProperty('--vacant', t.vac);
       if(t.line) root.style.setProperty('--line', t.line);
       if(t.paper) root.style.setProperty('--paper', t.paper);
+      if(t.statsX) root.style.setProperty('--stats-x', t.statsX);
+      if(t.statsY) root.style.setProperty('--stats-y', t.statsY);
     }
   } catch(e) { console.error('Failed to restore local save:', e); }
 
@@ -874,7 +888,9 @@
       ink: rs.getPropertyValue('--ink').trim(),
       vac: rs.getPropertyValue('--vacant').trim(),
       line: rs.getPropertyValue('--line').trim(),
-      paper: rs.getPropertyValue('--paper').trim()
+      paper: rs.getPropertyValue('--paper').trim(),
+      statsX: rs.getPropertyValue('--stats-x').trim(),
+      statsY: rs.getPropertyValue('--stats-y').trim()
     };
     const themeStr = JSON.stringify(themeObj);
     localStorage.setItem('rml_org_theme', themeStr);
@@ -1084,6 +1100,37 @@
       el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
     });
     root.querySelectorAll('button[data-action]').forEach(el => el.addEventListener('click', onButtonClick));
+
+    const overlay = document.getElementById('div-stats-overlay');
+    const handle = document.getElementById('div-stats-handle');
+    if (overlay && handle) {
+      let isDragging = false;
+      let startX, startY, initialX, initialY;
+      
+      handle.onmousedown = function(e) {
+        e.preventDefault(); // Fix for drag getting stuck due to text selection
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialX = overlay.offsetLeft;
+        initialY = overlay.offsetTop;
+        document.onmousemove = function(e) {
+          if (!isDragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          overlay.style.left = (initialX + dx) + 'px';
+          overlay.style.top = (initialY + dy) + 'px';
+        };
+        document.onmouseup = function() {
+          isDragging = false;
+          document.onmousemove = null;
+          document.onmouseup = null;
+          root.style.setProperty('--stats-x', overlay.style.left);
+          root.style.setProperty('--stats-y', overlay.style.top);
+          autoSaveLocal();
+        };
+      };
+    }
   }
 
   function renderDivStatsTable(dept) {
@@ -1113,7 +1160,8 @@
     const title = "DIV-" + dept.id.replace('div','');
 
     return `
-      <div class="div-stats-overlay">
+      <div class="div-stats-overlay" id="div-stats-overlay">
+        <div class="drag-handle" id="div-stats-handle">⠿ Drag to Move</div>
         <table class="div-stats-table">
           <thead>
             <tr>
@@ -1371,6 +1419,8 @@
           if(t.vac) root.style.setProperty('--vacant', t.vac);
           if(t.line) root.style.setProperty('--line', t.line);
           if(t.paper) root.style.setProperty('--paper', t.paper);
+          if(t.statsX) root.style.setProperty('--stats-x', t.statsX);
+          if(t.statsY) root.style.setProperty('--stats-y', t.statsY);
         } catch(e) {}
       }
       

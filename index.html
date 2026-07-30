@@ -214,6 +214,15 @@
     font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; color: #6b6255;
     font-style: italic; outline: none; margin-top: 2px; line-height: 1.3;
   }
+  .node-card .n-target {
+    font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; color: #0284c7;
+    font-weight: bold; outline: none; margin-top: 3px;
+  }
+  .node-card .n-target:empty::before {
+    content: attr(placeholder);
+    color: #94a3b8;
+    font-weight: normal;
+  }
   .node-card .n-count {
     font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; color: #8a8175;
     outline: none; margin-top: 3px;
@@ -320,7 +329,7 @@
     .toolbar .sub { font-size: 10px; }
     .node-card { min-width: 80px !important; padding: 2px 3px; max-width: 120px !important; }
     .node-card .n-name { font-size: 10px; }
-    .node-card .n-role, .node-card .n-note, .node-card .n-count { font-size: 8.5px; }
+    .node-card .n-role, .node-card .n-note, .node-card .n-count, .node-card .n-target { font-size: 8.5px; }
     .tree ul { padding-top: 10px; }
     .tree li { padding-top: 10px; padding-left: 2px; padding-right: 2px; }
     .tree li::before, .tree li::after, .tree ul ul::before { height: 10px; border-width: 1.5px; }
@@ -717,19 +726,7 @@
       }
       DEPTS = parsed;
     }
-    const savedTheme = localStorage.getItem('rml_org_theme');
-    if (savedTheme) {
-      const t = JSON.parse(savedTheme);
-      if(t.w) root.style.setProperty('--node-w', t.w);
-      if(t.f) root.style.setProperty('--font-mult', t.f);
-      if(t.bg) root.style.setProperty('--box-bg', t.bg);
-      if(t.ink) root.style.setProperty('--ink', t.ink);
-      if(t.vac) root.style.setProperty('--vacant', t.vac);
-      if(t.line) root.style.setProperty('--line', t.line);
-      if(t.paper) root.style.setProperty('--paper', t.paper);
-      if(t.statsX) root.style.setProperty('--stats-x', t.statsX);
-      if(t.statsY) root.style.setProperty('--stats-y', t.statsY);
-    }
+
   } catch(e) { console.error('Failed to restore local save:', e); }
 
   let activeDept = 0;
@@ -790,8 +787,9 @@
       <li>
         <div class="node-card${vacantClass}" data-id="${node.id}">
           <span class="n-name" contenteditable="true" data-field="name" data-id="${node.id}">${escapeHtml(node.name)}</span>
-          ${node.role || true ? `<span class="n-role" contenteditable="true" data-field="role" data-id="${node.id}">${escapeHtml(node.role)}</span>` : ''}
-          ${node.note ? `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}">${escapeHtml(node.note)}</span>` : `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" style="display:none"></span>`}
+          ${node.role || true ? `<span class="n-role" contenteditable="true" data-field="role" data-id="${node.id}" placeholder="Designation / Unit name">${escapeHtml(node.role)}</span>` : ''}
+          ${node.note ? `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" placeholder="Area">${escapeHtml(node.note)}</span>` : `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" placeholder="Area" style="display:none"></span>`}
+          ${isDiv ? `<span class="n-target" contenteditable="true" data-field="target" data-id="${node.id}" placeholder="Sales Tgt-       , Colle- Tgt-      ">${escapeHtml(node.target || '')}</span>` : ''}
           <span class="node-btns">
             <button data-action="toggle-vacant" data-id="${node.id}" title="Toggle vacant">${node.vacant ? '✓ filled' : '○ vacant'}</button>
             <button data-action="add-child" data-id="${node.id}" title="Add report">+ report</button>
@@ -864,10 +862,9 @@
   }
 
   function autoSaveLocal() {
-    const deptsStr = JSON.stringify(DEPTS);
-    localStorage.setItem('rml_org_depts', deptsStr);
     const rs = getComputedStyle(root);
-    const themeObj = {
+    if (!DEPTS[activeDept].theme) DEPTS[activeDept].theme = {};
+    DEPTS[activeDept].theme = {
       w: rs.getPropertyValue('--node-w').trim(),
       f: rs.getPropertyValue('--font-mult').trim(),
       bg: rs.getPropertyValue('--box-bg').trim(),
@@ -878,23 +875,34 @@
       statsX: rs.getPropertyValue('--stats-x').trim(),
       statsY: rs.getPropertyValue('--stats-y').trim()
     };
-    const themeStr = JSON.stringify(themeObj);
-    localStorage.setItem('rml_org_theme', themeStr);
+
+    const deptsStr = JSON.stringify(DEPTS);
+    localStorage.setItem('rml_org_depts', deptsStr);
     
     if (window.firebase && firebase.database) {
       firebase.database().ref('organogram').set({
-        depts: deptsStr,
-        theme: themeStr
+        depts: deptsStr
       });
     }
   }
 
   function render(fromRemote = false){
+    const dept = DEPTS[activeDept];
+    const t = dept.theme || {};
+    root.style.setProperty('--node-w', t.w || '120px');
+    root.style.setProperty('--font-mult', t.f || '1');
+    root.style.setProperty('--box-bg', t.bg || '#ffffff');
+    root.style.setProperty('--ink', t.ink || '#1c2530');
+    root.style.setProperty('--vacant', t.vac || '#b7dfb0');
+    root.style.setProperty('--line', t.line || '#c9c2b4');
+    root.style.setProperty('--paper', t.paper || '#f6f5f1');
+    if (t.statsX) root.style.setProperty('--stats-x', t.statsX);
+    if (t.statsY) root.style.setProperty('--stats-y', t.statsY);
+
     if (!fromRemote) {
       updateLiveCounts();
       autoSaveLocal();
     }
-    const dept = DEPTS[activeDept];
     root.innerHTML = `
       <div class="toolbar">
         <div>
@@ -1205,6 +1213,9 @@
     } else if (field === 'note') {
       node.note = text;
       render();
+    } else if (field === 'target') {
+      node.target = text;
+      render();
     }
   }
 
@@ -1234,34 +1245,19 @@
       return;
     }
     if (action === 'theme') {
-      const rs = getComputedStyle(root);
-      const hex = v => {
-        let h = rs.getPropertyValue(v).trim();
-        if(h.length === 4) h = '#' + h[1]+h[1] + h[2]+h[2] + h[3]+h[3];
-        return h;
-      };
-      document.getElementById('inp-w').value = parseFloat(rs.getPropertyValue('--node-w')) || 120;
-      document.getElementById('inp-f').value = parseFloat(rs.getPropertyValue('--font-mult')) || 1;
-      document.getElementById('inp-bg').value = hex('--box-bg') || '#ffffff';
-      document.getElementById('inp-ink').value = hex('--ink') || '#1c2530';
-      document.getElementById('inp-vac').value = hex('--vacant') || '#b7dfb0';
-      document.getElementById('inp-line').value = hex('--line') || '#c9c2b4';
-      document.getElementById('inp-paper').value = hex('--paper') || '#f6f5f1';
+      const t = DEPTS[activeDept].theme || {};
+      document.getElementById('inp-w').value = parseFloat(t.w || 120);
+      document.getElementById('inp-f').value = parseFloat(t.f || 1);
+      document.getElementById('inp-bg').value = t.bg || '#ffffff';
+      document.getElementById('inp-ink').value = t.ink || '#1c2530';
+      document.getElementById('inp-vac').value = t.vac || '#b7dfb0';
+      document.getElementById('inp-line').value = t.line || '#c9c2b4';
+      document.getElementById('inp-paper').value = t.paper || '#f6f5f1';
       document.getElementById('theme-dialog').showModal();
       return;
     }
     if (action === 'save') {
       localStorage.setItem('rml_org_depts', JSON.stringify(DEPTS));
-      const rs = getComputedStyle(root);
-      localStorage.setItem('rml_org_theme', JSON.stringify({
-        w: rs.getPropertyValue('--node-w').trim(),
-        f: rs.getPropertyValue('--font-mult').trim(),
-        bg: rs.getPropertyValue('--box-bg').trim(),
-        ink: rs.getPropertyValue('--ink').trim(),
-        vac: rs.getPropertyValue('--vacant').trim(),
-        line: rs.getPropertyValue('--line').trim(),
-        paper: rs.getPropertyValue('--paper').trim()
-      }));
       alert("Changes saved locally! Next time you open this file in this browser, your changes will be loaded automatically.");
       return;
     }
@@ -1320,13 +1316,14 @@
   document.body.insertAdjacentHTML('beforeend', dialogHtml);
 
   document.getElementById('btn-apply-theme').addEventListener('click', () => {
-    root.style.setProperty('--node-w', document.getElementById('inp-w').value + 'px');
-    root.style.setProperty('--font-mult', document.getElementById('inp-f').value);
-    root.style.setProperty('--box-bg', document.getElementById('inp-bg').value);
-    root.style.setProperty('--ink', document.getElementById('inp-ink').value);
-    root.style.setProperty('--vacant', document.getElementById('inp-vac').value);
-    root.style.setProperty('--line', document.getElementById('inp-line').value);
-    root.style.setProperty('--paper', document.getElementById('inp-paper').value);
+    if (!DEPTS[activeDept].theme) DEPTS[activeDept].theme = {};
+    DEPTS[activeDept].theme.w = document.getElementById('inp-w').value + 'px';
+    DEPTS[activeDept].theme.f = document.getElementById('inp-f').value;
+    DEPTS[activeDept].theme.bg = document.getElementById('inp-bg').value;
+    DEPTS[activeDept].theme.ink = document.getElementById('inp-ink').value;
+    DEPTS[activeDept].theme.vac = document.getElementById('inp-vac').value;
+    DEPTS[activeDept].theme.line = document.getElementById('inp-line').value;
+    DEPTS[activeDept].theme.paper = document.getElementById('inp-paper').value;
     document.getElementById('theme-dialog').close();
     render();
   });
@@ -1352,21 +1349,7 @@
       
       const currentDeptsStr = JSON.stringify(DEPTS);
       
-      // Read current theme state to prevent echoes on theme-only changes
-      const rs = getComputedStyle(root);
-      const currentThemeStr = JSON.stringify({
-        w: rs.getPropertyValue('--node-w').trim(),
-        f: rs.getPropertyValue('--font-mult').trim(),
-        bg: rs.getPropertyValue('--box-bg').trim(),
-        ink: rs.getPropertyValue('--ink').trim(),
-        vac: rs.getPropertyValue('--vacant').trim(),
-        line: rs.getPropertyValue('--line').trim(),
-        paper: rs.getPropertyValue('--paper').trim(),
-        statsX: rs.getPropertyValue('--stats-x').trim(),
-        statsY: rs.getPropertyValue('--stats-y').trim()
-      });
-
-      if (data.depts === currentDeptsStr && data.theme === currentThemeStr) {
+      if (data.depts === currentDeptsStr) {
         return; // Exact echo, ignore
       }
       
@@ -1396,21 +1379,6 @@
           // ----------------------------------------------------------------------------------------
 
           DEPTS = parsed;
-        } catch(e) {}
-      }
-      
-      if (data.theme) {
-        try {
-          const t = JSON.parse(data.theme);
-          if(t.w) root.style.setProperty('--node-w', t.w);
-          if(t.f) root.style.setProperty('--font-mult', t.f);
-          if(t.bg) root.style.setProperty('--box-bg', t.bg);
-          if(t.ink) root.style.setProperty('--ink', t.ink);
-          if(t.vac) root.style.setProperty('--vacant', t.vac);
-          if(t.line) root.style.setProperty('--line', t.line);
-          if(t.paper) root.style.setProperty('--paper', t.paper);
-          if(t.statsX) root.style.setProperty('--stats-x', t.statsX);
-          if(t.statsY) root.style.setProperty('--stats-y', t.statsY);
         } catch(e) {}
       }
       

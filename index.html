@@ -1114,7 +1114,7 @@
     const crT = cr.divMgr + cr.am + cr.su;
 
     if (deptId === 'salessupport') {
-      const overallTotal = 158 + grand; // 158 from other non-sales departments (9+16+65+9+59)
+      const overallTotal = 162 + grand; // 162 from other non-sales departments (9+16+65+9+59+4)
       const shortfall = (overallTotal - 230); // 230 existing is static
       const salesShortfall = grand - 95; // 95 existing is static
 
@@ -1148,6 +1148,7 @@
               <tr><td>PDI &amp; Painting</td><td>62</td><td>62</td><td>59</td><td>6</td><td>65</td><td>PDI Bhaluka (22), PDI Jashore (20), Admin (16), Painting (7)</td></tr>
               <tr><td>Body Making</td><td>10</td><td>10</td><td>8</td><td>1</td><td>9</td><td>1 Sr. Exe, 5 Techs/Foreman, 3 Casual staff</td></tr>
               <tr><td>CKD (Assembly Plant)</td><td>49</td><td>54</td><td>45</td><td>14</td><td>59</td><td>Production (37), QC/Wty (11), Logistics (9), Admin (2)</td></tr>
+              <tr><td>EV Team</td><td>0</td><td>0</td><td>0</td><td>4</td><td>4</td><td>1 Team Leader, 3 Executives</td></tr>
               <tr class="total-row"><td>TOTAL</td><td>241</td><td>264</td><td>230</td><td>${shortfall}</td><td>${overallTotal}</td><td>Grand Total Headcount: ${overallTotal}</td></tr>
             </tbody>
           </table>

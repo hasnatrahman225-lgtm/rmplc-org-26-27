@@ -739,6 +739,12 @@
     ]}),
   ]});
 
+  const deptEVTeam = N("Vacant", "Team Leader (Manager)", { vacant: true, children: [
+    N("Vacant", "Executive (Pick up)", { vacant: true }),
+    N("Vacant", "Executive (Bus)", { vacant: true }),
+    N("Vacant", "Executive (Pick up)", { vacant: true })
+  ]});
+
   let DEPTS = [
     { id:'salessupport', label:'⭐ Sales & Support Summary', meta:'Runner Motors PLC — Sales & Supporting Department Organogram · totals below are calculated live from every department tab', tree: salesSupportSummary, isSummary: true },
     { id:'salessummary', label:'⭐ Sales Dept Summary', meta:'Runner Motors PLC — Sales Department Organogram · totals below are calculated live from Division 1–4/RIG-1, Tech Support, Special Task & Collection and Resale tabs', tree: salesDeptSummary, isSummary: true },
@@ -753,6 +759,7 @@
     { id:'collresale', label:'Collection & Resale', meta:'Collection & Resale Department Organogram 2026-27 · Total proposed 6, existing 5, short 1 (new Executive, Head Office)', tree: deptCollResale },
     { id:'cvplant', label:'CV Assembly & Mfg Plant', meta:'Commercial Vehicle Assembly & Manufacturing Plant, Bhaluka, Mymensingh · Organogram FY 2026-27 · Factory Operation 59 proposed (43 existing, ~14 short)', tree: deptCVPlant },
     { id:'pdi', label:'PDI, Body Fab & Painting', meta:'PDI, Body Fabrication & Painting Section, Runner Motors Ltd. · Organization Chart 2026-2027 · Total proposed 74, existing 67 (PDI Bhaluka 22/21, Admin 16/15, PDI Jashore 20/17, Body Fabrication 9/8, Painting 7/6)', tree: deptPDI },
+    { id:'evteam', label:'EV Team', meta:'EV Team Organogram - Minimum Designation Manager or above', tree: deptEVTeam }
   ];
 
   let historyStack = [];
@@ -778,6 +785,16 @@
       if (div2 && localStorage.getItem('div2_migrated_v1') !== 'true') {
         div2.tree = JSON.parse(JSON.stringify(deptDiv2));
         localStorage.setItem('div2_migrated_v1', 'true');
+      }
+
+      // MIGRATION: Add EV Team if missing
+      if (!parsed.some(d => d.id === 'evteam')) {
+        parsed.push({
+          id: 'evteam',
+          label: 'EV Team',
+          meta: 'EV Team Organogram - Minimum Designation Manager or above',
+          tree: JSON.parse(JSON.stringify(deptEVTeam))
+        });
       }
 
       DEPTS = parsed;
@@ -1483,6 +1500,20 @@
                 firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
               }
             }, 2500);
+          }
+          
+          if (!parsed.some(d => d.id === 'evteam')) {
+            parsed.push({
+              id: 'evteam',
+              label: 'EV Team',
+              meta: 'EV Team Organogram - Minimum Designation Manager or above',
+              tree: JSON.parse(JSON.stringify(deptEVTeam))
+            });
+            setTimeout(() => {
+              if (window.firebase) {
+                firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
+              }
+            }, 3000);
           }
           // ----------------------------------------------------------------------------------------
 

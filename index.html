@@ -1456,7 +1456,7 @@
           const parsed = JSON.parse(data.depts);
           const salesSumTree = parsed.find(d => d.id === 'salessummary')?.tree;
           const supportTree = parsed.find(d => d.id === 'salessupport')?.tree;
-          if (salesSumTree && supportTree && supportTree.children && supportTree.children[0] && supportTree.children[0].children[0] && supportTree.children[0].children[0].link) {
+          if (salesSumTree && supportTree?.children?.[0]?.children?.[0]?.link) {
             supportTree.children[0].children[0].link.summaryNode = salesSumTree;
           }
           

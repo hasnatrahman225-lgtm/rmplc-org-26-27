@@ -736,6 +736,7 @@
       L("PDI", "(65)", 'pdi'),
       L("BODY MAKING", "(9)", 'pdi', 'Body Section'),
       L("CKD", "(59)", 'cvplant'),
+      L("EV TEAM", "(4)", 'evteam')
     ]}),
   ]});
 
@@ -795,6 +796,15 @@
           meta: 'EV Team Organogram - Minimum Designation Manager or above',
           tree: JSON.parse(JSON.stringify(deptEVTeam))
         });
+      }
+
+      // MIGRATION: Add EV Team to Sales Support Summary if missing
+      const localSupport = parsed.find(d => d.id === 'salessupport');
+      if (localSupport && localSupport.tree && localSupport.tree.children && localSupport.tree.children[0] && localSupport.tree.children[0].children) {
+        const hodChildren = localSupport.tree.children[0].children;
+        if (!hodChildren.some(c => c.link && c.link.openTab === 'evteam')) {
+          hodChildren.push(L("EV TEAM", "(4)", 'evteam'));
+        }
       }
 
       DEPTS = parsed;
@@ -1514,6 +1524,18 @@
                 firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
               }
             }, 3000);
+          }
+
+          // MIGRATION: Add EV Team to Sales Support Summary if missing
+          const remoteSupport = parsed.find(d => d.id === 'salessupport');
+          if (remoteSupport && remoteSupport.tree && remoteSupport.tree.children && remoteSupport.tree.children[0] && remoteSupport.tree.children[0].children) {
+            const hodChildren = remoteSupport.tree.children[0].children;
+            if (!hodChildren.some(c => c.link && c.link.openTab === 'evteam')) {
+              hodChildren.push(L("EV TEAM", "(4)", 'evteam'));
+              setTimeout(() => {
+                if (window.firebase) firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
+              }, 3500);
+            }
           }
           // ----------------------------------------------------------------------------------------
 

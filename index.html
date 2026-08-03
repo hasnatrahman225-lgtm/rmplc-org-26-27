@@ -218,9 +218,11 @@
     font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; color: #0284c7;
     font-weight: bold; outline: none; margin-top: 3px;
   }
+  .node-card .n-note:empty::before,
+  .node-card .n-role:empty::before,
   .node-card .n-target:empty::before {
     content: attr(placeholder);
-    color: #94a3b8;
+    color: #b1a9a0;
     font-weight: normal;
   }
   .node-card .n-count {
@@ -338,6 +340,7 @@
 
 <script>
 (function(){
+  let isInitialLoad = true;
   const root = document.getElementById('org-root');
   let uid = 1;
   const nid = () => 'n' + (uid++);
@@ -419,29 +422,66 @@
     ]}),
   ]});
 
-  const deptDiv2 = N("Faruk Ahammed Akanda", "GM — Division 2", { children: [
-    N("Md. Abdur Rahim Mondal", "Dy Manager (B1)", { note: "Khulna", children: [
-      N("MD Mostafa", "Officer, Khulna"), N("Vacant", "Jashore", {vacant:true}), N("Vacant / Rashedul Haque", "Dy Mgr", {vacant:true})
+  const deptDiv2 = N("Faruk Ahammed Akanda", "GM / DIV 2", { children: [
+    N("Md. Abdur Rahim Mondal", "Dy Manager / B1", { note: "Khulna", children: [
+      N("Md. Mustafa", "Officer / B1-1"),
+      N("Md. Shakawath Hossain", "Sr. Executive / B1-2"),
+      N("Vacant", "/ B1-3", { vacant: true }),
+      N("Vacant", "/ B1-4", { vacant: true })
     ]}),
-    N("Syed Muhabub Hossain", "Manager (B2)", { note: "Jessore", children: [
-      N("MD. Al Amin", "Officer"), N("Vacant", "Satkhira", {vacant:true}), N("MD. Sofikur Rahman", "Sr. Executive")
+    N("Syed Muhabub Hossain", "Manager / B2", { note: "Jessore", children: [
+      N("Md. Al Amin", "Officer / B2-1"),
+      N("Md. Arman Hasan", "/ B2-2"),
+      N("Md. Sofikur Rahman", "Sr. Executive / B2-3"),
+      N("Vacant", "/ B2-4", { vacant: true })
     ]}),
-    N("Md. Abdul Kaiyum", "Dy Manager (B3)", { note: "Faridpur", children: [
-      N("Vacant", "Faridpur", {vacant:true}), N("MD Sumon Munshi", "Executive"), N("Vacant", "Madaripur / Gopalganj", {vacant:true}),
-      N("MD Jillur Rahim Mia", "Asst. Manager"), N("Vacant", "Barisal / Bhola", {vacant:true})
+    N("Md. Abdul Kaiyum", "Dy Manager / B3", { note: "Faridpur", children: [
+      N("Md. Emran Hossain Bappi", "Sr. Executive / B3-1"),
+      N("Sumon Munsi", "Executive / B3-2"),
+      N("Md. Olikur Rahim Mia", "AM / B3-3", { note: "Bhola, Jhalakathi, Barishal" }),
+      N("Md. Ashikur Rahman", "Executive / B3-4", { note: "Barguna, Patuakhali, Barishal" }),
+      N("Md. Azizur Rahman", "Sr. Executive / B3-5", { note: "Gopalganj" }),
+      N("Vacant", "/ B3-6", { vacant: true })
     ]}),
-    N("Md. Rafiqul Alam", "Manager (B4)", { note: "Khustia", children: [
-      N("Vacant", "Rajbari", {vacant:true}), N("MD Ibrahim Hossain", "Executive")
+    N("Md. Rafiqul Alam", "Manager / B4", { note: "Khustia", children: [
+      N("Md. Rubel Islam", "Sr. Executive / B4-1", { note: "Rajbari" }),
+      N("Md. Ibrahim Hossen", "Executive / B4-2", { note: "Chuadanga" }),
+      N("Vacant", "/ B4-3", { vacant: true }),
+      N("Vacant", "/ B4-4", { vacant: true })
     ]}),
-    N("A. B. Siddique", "Dy Manager (D1)", { note: "Chittagong Division", children: [
-      N("MD Hasan Tareq", "Asst. Manager"), N("MD Saiful Islam", "Executive"), N("Mohammad Omar Faroq", "Asst. Manager"), N("Vacant", "Chattogram", {vacant:true})
+    N("A. B. Siddique", "Dy Manager / D1", { note: "Chittagong Division", children: [
+      N("Corporate", "", { children: [
+        N("Mohammad Omar Faruq", "AM / D1-1"),
+        N("Md. Saiful Islam", "Sr. Executive / D1-2"),
+        N("Vacant", "/ D1-3", { vacant: true })
+      ]}),
+      N("Retail", "", { children: [
+        N("Md Hasan Tareq", "AM / D1-4"),
+        N("Vacant", "/ D1-5", { vacant: true }),
+        N("Vacant", "/ D1-6", { vacant: true })
+      ]})
     ]}),
-    N("Md. Roknuzzaman", "Manager (D2)", { note: "Comilla, B.Baria & Feni", children: [
-      N("Nayeeb Uddin Aziz", "Executive"), N("Al-Amin", "Executive"), N("MD Nur Islam Nahid", "Executive"), N("MD Mohi Uddin", "Sr. Exe"), N("MD Nazrul Islam", "Executive")
+    N("Md. Roknuzzaman", "Manager / D2", { note: "Comilla, B. Baria, Chandpur", children: [
+      N("Md. Mohi Uddin", "AM / D2-1"),
+      N("Al- Amin", "Executive / D2-2"),
+      N("Vacant", "/ D2-3", { vacant: true }),
+      N("Vacant", "/ D2-4", { vacant: true })
     ]}),
-    N("Md. Aminul Islam", "Dy Manager (M3)", { note: "Gazipur Sadar & Joydebpur Sadar", children: [
-      N("Mithun Biswas", "Sr. Officer"), N("MD Sohel Rana", "Sr. Exe"), N("MD Ashraful Karim", "Asst. Manager"), N("Vacant", "Gazipur", {vacant:true})
+    N("Md. Nazrul Islam", "/ D3", { note: "Noakhali, Laxmipur, Feni", children: [
+      N("Md. Nur Islam", "Executive / D3-1"),
+      N("Kamrul Hasan", "Executive / D3-2"),
+      N("Vacant", "/ D3-3", { vacant: true })
     ]}),
+    N("Md. Aminul Islam", "Dy Manager / M3", { note: "Gazipur Sadar & Joydebpur Sadar", children: [
+      N("Md. Ashraful Karim", "AM / M3-1"),
+      N("Md. Sohel Rana", "Sr. Executive / M3-2"),
+      N("Vacant", "/ M3-3", { vacant: true })
+    ]}),
+    N("Mithun Biswas", "/ M4", { note: "Tongi & Kaligonj", children: [
+      N("Mithun Biswas", "Executive / M4-1"),
+      N("Sazib Ahmed", "Sr. Executive / M4-2"),
+      N("Vacant", "/ M4-3", { vacant: true })
+    ]})
   ]});
 
   const deptDiv3 = N("K. Salahdin Al Osman", "DGM — Division 3", { children: [
@@ -715,6 +755,9 @@
     { id:'pdi', label:'PDI, Body Fab & Painting', meta:'PDI, Body Fabrication & Painting Section, Runner Motors Ltd. · Organization Chart 2026-2027 · Total proposed 74, existing 67 (PDI Bhaluka 22/21, Admin 16/15, PDI Jashore 20/17, Body Fabrication 9/8, Painting 7/6)', tree: deptPDI },
   ];
 
+  let historyStack = [];
+  let lastSavedStr = "";
+
   try {
     const saved = localStorage.getItem('rml_org_depts');
     if (saved) {
@@ -724,10 +767,25 @@
       if (salesSumTree && supportTree && supportTree.children && supportTree.children[0] && supportTree.children[0].children[0] && supportTree.children[0].children[0].link) {
         supportTree.children[0].children[0].link.summaryNode = salesSumTree;
       }
+      
+      // MIGRATION: Force update from hardcoded data if outdated
+      const div1 = parsed.find(d => d.id === 'div1');
+      if (div1 && localStorage.getItem('div1_migrated_v3') !== 'true') {
+        div1.tree = JSON.parse(JSON.stringify(deptDiv1));
+        localStorage.setItem('div1_migrated_v3', 'true');
+      }
+      const div2 = parsed.find(d => d.id === 'div2');
+      if (div2 && localStorage.getItem('div2_migrated_v1') !== 'true') {
+        div2.tree = JSON.parse(JSON.stringify(deptDiv2));
+        localStorage.setItem('div2_migrated_v1', 'true');
+      }
+
       DEPTS = parsed;
     }
 
   } catch(e) { console.error('Failed to restore local save:', e); }
+
+  lastSavedStr = JSON.stringify(DEPTS);
 
   let activeDept = 0;
 
@@ -788,7 +846,7 @@
         <div class="node-card${vacantClass}" data-id="${node.id}">
           <span class="n-name" contenteditable="true" data-field="name" data-id="${node.id}">${escapeHtml(node.name)}</span>
           ${node.role || true ? `<span class="n-role" contenteditable="true" data-field="role" data-id="${node.id}" placeholder="Designation / Unit name">${escapeHtml(node.role)}</span>` : ''}
-          ${node.note ? `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" placeholder="Area">${escapeHtml(node.note)}</span>` : `<span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" placeholder="Area" style="display:none"></span>`}
+          <span class="n-note" contenteditable="true" data-field="note" data-id="${node.id}" placeholder="Area">${escapeHtml(node.note || '')}</span>
           ${isDiv ? `<span class="n-target" contenteditable="true" data-field="target" data-id="${node.id}" placeholder="Sales Tgt-       , Colle- Tgt-      ">${escapeHtml(node.target || '')}</span>` : ''}
           <span class="node-btns">
             <button data-action="toggle-vacant" data-id="${node.id}" title="Toggle vacant">${node.vacant ? '✓ filled' : '○ vacant'}</button>
@@ -862,6 +920,8 @@
   }
 
   function autoSaveLocal() {
+    if (isInitialLoad) return;
+
     const rs = getComputedStyle(root);
     if (!DEPTS[activeDept].theme) DEPTS[activeDept].theme = {};
     DEPTS[activeDept].theme = {
@@ -877,6 +937,16 @@
     };
 
     const deptsStr = JSON.stringify(DEPTS);
+    if (lastSavedStr && deptsStr === lastSavedStr) {
+      return; // No changes, do not overwrite storage or Firebase
+    }
+
+    if (lastSavedStr && deptsStr !== lastSavedStr) {
+      historyStack.push(lastSavedStr);
+      if (historyStack.length > 50) historyStack.shift();
+    }
+    lastSavedStr = deptsStr;
+
     localStorage.setItem('rml_org_depts', deptsStr);
     
     if (window.firebase && firebase.database) {
@@ -913,6 +983,7 @@
           <button class="btn ${isFitScreen ? 'primary' : ''}" data-action="toggle-fit">Fit Screen</button>
           <button class="btn" data-action="zoom-out">Box -</button>
           <button class="btn" data-action="zoom-in">Box +</button>
+          <button class="btn" data-action="undo" title="Undo (Ctrl+Z)" style="font-weight:bold; color:#0366d6;">↶ Undo</button>
           <button class="btn" data-action="theme">🎨 Formatting</button>
           <button class="btn primary" data-action="save">💾 Save Progress</button>
           <button class="btn" data-action="print">Print / Save PDF</button>
@@ -1287,15 +1358,37 @@
       if (!node.note) node.note = 'note';
       render();
     } else if (action === 'remove-node') {
-      if (confirm('Remove this box and everyone reporting under it?')) {
-        const parent = findParent(tree, id, null);
-        if (parent) {
-          parent.children = parent.children.filter(c => c.id !== id);
-          render();
-        }
+      if(!confirm('Are you sure you want to remove this node and all its reports?')) return;
+      const dept = DEPTS[activeDept];
+      const p = findParent(dept.tree, id, null);
+      if(p && p.children) {
+        p.children = p.children.filter(c => c.id !== id);
+        render();
       }
+      return;
+    } else if (action === 'undo') {
+      performUndo();
+      return;
     }
   }
+
+  function performUndo() {
+    if (historyStack.length === 0) {
+      alert("Nothing to undo!");
+      return;
+    }
+    const prevStateStr = historyStack.pop();
+    DEPTS = JSON.parse(prevStateStr);
+    lastSavedStr = prevStateStr;
+    render(false);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      performUndo();
+    }
+  });
 
   const dialogHtml = `
     <dialog id="theme-dialog" class="theme-dialog">
@@ -1316,14 +1409,19 @@
   document.body.insertAdjacentHTML('beforeend', dialogHtml);
 
   document.getElementById('btn-apply-theme').addEventListener('click', () => {
-    if (!DEPTS[activeDept].theme) DEPTS[activeDept].theme = {};
-    DEPTS[activeDept].theme.w = document.getElementById('inp-w').value + 'px';
-    DEPTS[activeDept].theme.f = document.getElementById('inp-f').value;
-    DEPTS[activeDept].theme.bg = document.getElementById('inp-bg').value;
-    DEPTS[activeDept].theme.ink = document.getElementById('inp-ink').value;
-    DEPTS[activeDept].theme.vac = document.getElementById('inp-vac').value;
-    DEPTS[activeDept].theme.line = document.getElementById('inp-line').value;
-    DEPTS[activeDept].theme.paper = document.getElementById('inp-paper').value;
+    let t = DEPTS[activeDept].theme;
+    if (!t) {
+      t = {};
+      DEPTS[activeDept].theme = t;
+    }
+    t.w = document.getElementById('inp-w').value + 'px';
+    t.f = document.getElementById('inp-f').value;
+    t.bg = document.getElementById('inp-bg').value;
+    t.ink = document.getElementById('inp-ink').value;
+    t.vac = document.getElementById('inp-vac').value;
+    t.line = document.getElementById('inp-line').value;
+    t.paper = document.getElementById('inp-paper').value;
+    
     document.getElementById('theme-dialog').close();
     render();
   });
@@ -1376,6 +1474,18 @@
               }
             }, 2000);
           }
+          
+          const div2 = parsed.find(d => d.id === 'div2');
+          if (div2 && localStorage.getItem('div2_migrated_v1') !== 'true') {
+            div2.tree = JSON.parse(JSON.stringify(deptDiv2));
+            localStorage.setItem('div2_migrated_v1', 'true');
+            
+            setTimeout(() => {
+              if (window.firebase) {
+                firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
+              }
+            }, 2500);
+          }
           // ----------------------------------------------------------------------------------------
 
           DEPTS = parsed;
@@ -1385,7 +1495,7 @@
       render(true); // Render from remote, don't trigger autoSaveLocal
     });
   }
-
   render();
+  isInitialLoad = false;
 })();
 </script>

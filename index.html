@@ -1463,12 +1463,10 @@
           // --- MIGRATION: Force update Div-1 from hardcoded data if it's outdated in Firebase ---
           const div1 = parsed.find(d => d.id === 'div1');
           if (div1 && localStorage.getItem('div1_migrated_v3') !== 'true') {
-            // Unconditionally overwrite Div-1 with the latest hardcoded data ONCE
             div1.tree = JSON.parse(JSON.stringify(deptDiv1));
             localStorage.setItem('div1_migrated_v3', 'true');
             
             setTimeout(() => {
-              // Save it back to Firebase so it persists for everyone
               if (window.firebase) {
                 firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
               }
@@ -1489,10 +1487,17 @@
           // ----------------------------------------------------------------------------------------
 
           DEPTS = parsed;
-        } catch(e) {}
+          lastSavedStr = JSON.stringify(DEPTS);
+          
+          const activeEl = document.activeElement;
+          const isTyping = activeEl && activeEl.hasAttribute('contenteditable');
+          if (!isTyping) {
+            render(true); // Render from remote, don't trigger autoSaveLocal
+          }
+        } catch(e) {
+          console.error("Failed to parse Firebase data", e);
+        }
       }
-      
-      render(true); // Render from remote, don't trigger autoSaveLocal
     });
   }
   render();

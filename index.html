@@ -1086,7 +1086,7 @@
       
       // Exclude Head of Sales from department counts to avoid double counting
       // (The Head of Sales is already added as +1 in the grand total calculation)
-      if (str.includes("feroz") || str.includes("sr. gm") || str.includes("sr gm") || str.includes("head of sales")) {
+      if (str.includes("feroz") || str.includes("sr. gm") || str.includes("sr gm") || str.includes("head of sales") || str.includes("হেড অফ সেলস") || node.name.toLowerCase() === "hod") {
         (node.children || []).forEach(c => traverse(c, depth + 1));
         return;
       }
@@ -1161,7 +1161,7 @@
           const str = (n.name + " " + (n.role || "")).toLowerCase();
           
           // Exclude Head of Sales from department counts to avoid double counting
-          if (str.includes("feroz") || str.includes("sr. gm") || str.includes("sr gm") || str.includes("head of sales")) {
+          if (str.includes("feroz") || str.includes("sr. gm") || str.includes("sr gm") || str.includes("head of sales") || str.includes("হেড অফ সেলস") || n.name.toLowerCase() === "hod") {
             // Do not count this node
           } else {
             proposed++;
@@ -1213,7 +1213,7 @@
     if (salesSummaryTree && salesSummaryTree.children) {
       salesSummaryTree.children.forEach(c => {
         if (c.link && c.link.openTab === 'specialtask') {
-          c.name = `SPECIAL TASK (${st.divMgr + st.am + st.su})`;
+          c.name = `SPECIAL TASK (${stT})`;
         }
       });
     }

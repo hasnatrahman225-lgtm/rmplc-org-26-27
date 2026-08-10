@@ -1103,27 +1103,76 @@
     const totDivMgr = d1.divMgr + d2.divMgr + d3.divMgr + d4.divMgr + ts.divMgr + st.divMgr + cr.divMgr;
     const totAm = d1.am + d2.am + d3.am + d4.am + ts.am + st.am + cr.am;
     const totSu = d1.su + d2.su + d3.su + d4.su + ts.su + st.su + cr.su;
-    const grand = 1 + totDivMgr + totAm + totSu; // +1 for HOD
+    const salesTotal = 1 + totDivMgr + totAm + totSu; // +1 for HOD
 
-    const d1T = d1.divMgr + d1.am + d1.su;
-    const d2T = d2.divMgr + d2.am + d2.su;
-    const d3T = d3.divMgr + d3.am + d3.su;
-    const d4T = d4.divMgr + d4.am + d4.su;
-    const tsT = ts.divMgr + ts.am + ts.su;
-    const stT = st.divMgr + st.am + st.su;
-    const crT = cr.divMgr + cr.am + cr.su;
+    // Helper for pure people counting in non-sales departments
+    function countPeople(dId, excludeCount) {
+      const t = DEPTS.find(d => d.id === dId)?.tree;
+      if (!t) return { proposed: 0, existing: 0 };
+      let proposed = 0;
+      let existing = 0;
+      function traverse(n) {
+        if (!n.noCount) {
+          proposed++;
+          if (!n.vacant && n.name.toLowerCase() !== 'vacant') {
+            existing++;
+          }
+        }
+        (n.children || []).forEach(traverse);
+      }
+      traverse(t);
+      return { 
+        proposed: proposed - (excludeCount || 0), 
+        existing: existing - (excludeCount || 0) 
+      };
+    }
+
+    const marketingStats = countPeople('marketing');
+    const salesAdminStats = countPeople('salesadmin', 5); // Exclude 5 group nodes
+    const evTeamStats = countPeople('evteam');
+
+    // Hardcoded baselines for departments with complex role strings
+    const pdiProposed = 65; const pdiExisting = 59;
+    const bodyProposed = 9; const bodyExisting = 8;
+    const ckdProposed = 59; const ckdExisting = 45;
+
+    const overallTotal = salesTotal + marketingStats.proposed + salesAdminStats.proposed + pdiProposed + bodyProposed + ckdProposed + evTeamStats.proposed;
+    const overallExisting = 95 /* static sales existing */ + marketingStats.existing + salesAdminStats.existing + pdiExisting + bodyExisting + ckdExisting + evTeamStats.existing;
+    const shortfall = overallTotal - overallExisting;
+    const salesShortfall = salesTotal - 95;
+
+    // Dynamically update Sales & Support Summary flowchart
+    const supportTree = DEPTS.find(d => d.id === 'salessupport')?.tree;
+    if (supportTree && supportTree.children && supportTree.children[0]) {
+      const hod = supportTree.children[0];
+      hod.role = `(${overallTotal})`;
+      if (hod.children) {
+        hod.children.forEach(c => {
+          if (c.name === "SALES") c.role = `(${salesTotal})`;
+          if (c.name === "MARKETING") c.role = `(${marketingStats.proposed})`;
+          if (c.name === "SALE ADMIN") c.role = `(${salesAdminStats.proposed})`;
+          if (c.name === "EV TEAM") c.role = `(${evTeamStats.proposed})`;
+        });
+      }
+    }
+
+    // Dynamically update Sales Dept Summary flowchart (Special Task etc.)
+    const salesSummaryTree = DEPTS.find(d => d.id === 'salessummary')?.tree;
+    if (salesSummaryTree && salesSummaryTree.children) {
+      salesSummaryTree.children.forEach(c => {
+        if (c.link && c.link.openTab === 'specialtask') {
+          c.name = `SPECIAL TASK (${st.divMgr + st.am + st.su})`;
+        }
+      });
+    }
 
     if (deptId === 'salessupport') {
-      const overallTotal = 162 + grand; // 162 from other non-sales departments (9+16+65+9+59+4)
-      const shortfall = (overallTotal - 230); // 230 existing is static
-      const salesShortfall = grand - 95; // 95 existing is static
-
       return `
         <div class="metrics-grid">
           <div class="metric-card"><div class="metric-label">Total Proposed Headcount</div><div class="metric-value">${overallTotal}</div><div class="metric-sub">Auto-Calculated Target</div></div>
-          <div class="metric-card success"><div class="metric-label">Existing Staff</div><div class="metric-value">230</div><div class="metric-sub">Currently Active</div></div>
+          <div class="metric-card success"><div class="metric-label">Existing Staff</div><div class="metric-value">${overallExisting}</div><div class="metric-sub">Currently Active</div></div>
           <div class="metric-card warning"><div class="metric-label">Shortfall / Required</div><div class="metric-value">${shortfall}</div><div class="metric-sub">Vacancies / New Posts</div></div>
-          <div class="metric-card accent"><div class="metric-label">Sales Dept Proposed</div><div class="metric-value">${grand}</div><div class="metric-sub">${((grand/overallTotal)*100).toFixed(1)}% of Total Headcount</div></div>
+          <div class="metric-card accent"><div class="metric-label">Sales Dept Proposed</div><div class="metric-value">${salesTotal}</div><div class="metric-sub">${((salesTotal/overallTotal)*100).toFixed(1)}% of Total Headcount</div></div>
         </div>
         <div class="summary-tables-container">
           <table class="summary-table">
@@ -1142,14 +1191,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>Sales Department</td><td>95</td><td>113</td><td>95</td><td>${salesShortfall}</td><td>${grand}</td><td>Divisions 1-4, Tec Support, Special Task &amp; Collection &amp; Resale</td></tr>
-              <tr><td>Marketing Department</td><td>9</td><td>9</td><td>7</td><td>2</td><td>9</td><td>1 Sr. Mgr, 1 Dept Mgr, 2 Vacancies (MIS, BTL)</td></tr>
-              <tr><td>Sales Admin</td><td>16</td><td>16</td><td>16</td><td>0</td><td>16</td><td>4 Functional Wings under Sr. Manager (Mokhles)</td></tr>
+              <tr><td>Sales Department</td><td>95</td><td>113</td><td>95</td><td>${salesShortfall}</td><td>${salesTotal}</td><td>Divisions 1-4, Tec Support, Special Task &amp; Collection &amp; Resale</td></tr>
+              <tr><td>Marketing Department</td><td>9</td><td>9</td><td>${marketingStats.existing}</td><td>${marketingStats.proposed - marketingStats.existing}</td><td>${marketingStats.proposed}</td><td>1 Sr. Mgr, 1 Dept Mgr, 2 Vacancies (MIS, BTL)</td></tr>
+              <tr><td>Sales Admin</td><td>16</td><td>16</td><td>${salesAdminStats.existing}</td><td>${salesAdminStats.proposed - salesAdminStats.existing}</td><td>${salesAdminStats.proposed}</td><td>4 Functional Wings under Sr. Manager (Mokhles)</td></tr>
               <tr><td>PDI &amp; Painting</td><td>62</td><td>62</td><td>59</td><td>6</td><td>65</td><td>PDI Bhaluka (22), PDI Jashore (20), Admin (16), Painting (7)</td></tr>
               <tr><td>Body Making</td><td>10</td><td>10</td><td>8</td><td>1</td><td>9</td><td>1 Sr. Exe, 5 Techs/Foreman, 3 Casual staff</td></tr>
               <tr><td>CKD (Assembly Plant)</td><td>49</td><td>54</td><td>45</td><td>14</td><td>59</td><td>Production (37), QC/Wty (11), Logistics (9), Admin (2)</td></tr>
-              <tr><td>EV Team</td><td>0</td><td>0</td><td>0</td><td>4</td><td>4</td><td>1 Team Leader, 3 Executives</td></tr>
-              <tr class="total-row"><td>TOTAL</td><td>241</td><td>264</td><td>230</td><td>${shortfall}</td><td>${overallTotal}</td><td>Grand Total Headcount: ${overallTotal}</td></tr>
+              <tr><td>EV Team</td><td>0</td><td>0</td><td>${evTeamStats.existing}</td><td>${evTeamStats.proposed - evTeamStats.existing}</td><td>${evTeamStats.proposed}</td><td>1 Team Leader, 3 Executives</td></tr>
+              <tr class="total-row"><td>TOTAL</td><td>241</td><td>264</td><td>${overallExisting}</td><td>${shortfall}</td><td>${overallTotal}</td><td>Grand Total Headcount: ${overallTotal}</td></tr>
             </tbody>
           </table>
         </div>

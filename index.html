@@ -1084,6 +1084,13 @@
       
       const str = (node.name + " " + (node.role || "")).toLowerCase();
       
+      // Exclude Head of Sales from department counts to avoid double counting
+      // (The Head of Sales is already added as +1 in the grand total calculation)
+      if (str.includes("feroz") || str.includes("sr. gm") || str.includes("sr gm") || str.includes("head of sales")) {
+        (node.children || []).forEach(c => traverse(c, depth + 1));
+        return;
+      }
+      
       if (dId.startsWith('div')) {
         if (depth === 0) counts.divMgr++;
         else if (depth === 1) counts.am++;
@@ -1151,9 +1158,16 @@
       let existing = 0;
       function traverse(n) {
         if (!n.noCount) {
-          proposed++;
-          if (!n.vacant && n.name.toLowerCase() !== 'vacant') {
-            existing++;
+          const str = (n.name + " " + (n.role || "")).toLowerCase();
+          
+          // Exclude Head of Sales from department counts to avoid double counting
+          if (str.includes("feroz") || str.includes("sr. gm") || str.includes("sr gm") || str.includes("head of sales")) {
+            // Do not count this node
+          } else {
+            proposed++;
+            if (!n.vacant && n.name.toLowerCase() !== 'vacant') {
+              existing++;
+            }
           }
         }
         (n.children || []).forEach(traverse);

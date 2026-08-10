@@ -1105,6 +1105,14 @@
     const totSu = d1.su + d2.su + d3.su + d4.su + ts.su + st.su + cr.su;
     const salesTotal = 1 + totDivMgr + totAm + totSu; // +1 for HOD
 
+    const d1T = d1.divMgr + d1.am + d1.su;
+    const d2T = d2.divMgr + d2.am + d2.su;
+    const d3T = d3.divMgr + d3.am + d3.su;
+    const d4T = d4.divMgr + d4.am + d4.su;
+    const tsT = ts.divMgr + ts.am + ts.su;
+    const stT = st.divMgr + st.am + st.su;
+    const crT = cr.divMgr + cr.am + cr.su;
+
     // Helper for pure people counting in non-sales departments
     function countPeople(dId, excludeCount) {
       const t = DEPTS.find(d => d.id === dId)?.tree;
@@ -1229,7 +1237,7 @@
               <tr><td>DIV / RIG Manager</td><td>${d1.divMgr || '-'}</td><td>${d2.divMgr || '-'}</td><td>${d3.divMgr || '-'}</td><td>${d4.divMgr || '-'}</td><td>${ts.divMgr || '-'}</td><td>${st.divMgr || '-'}</td><td>${cr.divMgr || '-'}</td><td>${totDivMgr}</td></tr>
               <tr><td>Area Manager</td><td>${d1.am || '-'}</td><td>${d2.am || '-'}</td><td>${d3.am || '-'}</td><td>${d4.am || '-'}</td><td>${ts.am || '-'}</td><td>${st.am || '-'}</td><td>${cr.am || '-'}</td><td>${totAm}</td></tr>
               <tr><td>Sales Units</td><td>${d1.su || '-'}</td><td>${d2.su || '-'}</td><td>${d3.su || '-'}</td><td>${d4.su || '-'}</td><td>${ts.su || '-'}</td><td>${st.su || '-'}</td><td>${cr.su || '-'}</td><td>${totSu}</td></tr>
-              <tr class="total-row"><td>TOTAL</td><td>${d1T}</td><td>${d2T}</td><td>${d3T}</td><td>${d4T}</td><td>${tsT}</td><td>${stT}</td><td>${crT}</td><td>${grand}</td></tr>
+              <tr class="total-row"><td>TOTAL</td><td>${d1T}</td><td>${d2T}</td><td>${d3T}</td><td>${d4T}</td><td>${tsT}</td><td>${stT}</td><td>${crT}</td><td>${salesTotal}</td></tr>
             </tbody>
           </table>
         </div>

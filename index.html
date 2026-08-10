@@ -765,6 +765,12 @@
 
   let historyStack = [];
   let lastSavedStr = "";
+  let tableOverrides = {};
+  try { tableOverrides = JSON.parse(localStorage.getItem('rml_table_overrides') || '{}'); } catch(e){}
+
+  function saveTableOverrides() {
+    localStorage.setItem('rml_table_overrides', JSON.stringify(tableOverrides));
+  }
 
   try {
     const saved = localStorage.getItem('rml_org_depts');
@@ -1075,15 +1081,27 @@
 
     function traverse(node, depth) {
       if (node.noCount) return;
+      
+      const str = (node.name + " " + (node.role || "")).toLowerCase();
+      
       if (dId.startsWith('div')) {
         if (depth === 0) counts.divMgr++;
         else if (depth === 1) counts.am++;
         else counts.su++;
-      } else if (dId === 'techsupport' || dId === 'specialtask') {
-        counts.am++;
-      } else if (dId === 'collresale') {
-        if (depth <= 2) counts.am++;
-        else counts.su++;
+      } else {
+        // Smart matching for non-div teams to correctly classify Area Managers vs Sales Units
+        if (str.includes("officer") || str.includes("executive") || str.includes("mechanic") || str.includes("su ") || str.includes("staff")) {
+          counts.su++;
+        } else if (str.includes("manager") || str.includes("am/dm") || str.includes("team leader")) {
+          counts.am++;
+        } else if (str.includes("dgm") || str.includes("gm ") || str.includes("hod") || str.includes("head")) {
+          counts.divMgr++;
+        } else {
+          // Fallback by depth
+          if (depth === 0) counts.divMgr++;
+          else if (depth === 1) counts.am++;
+          else counts.su++;
+        }
       }
       (node.children || []).forEach(c => traverse(c, depth + 1));
     }
@@ -1100,18 +1118,30 @@
     const st = getCounts('specialtask');
     const cr = getCounts('collresale');
 
-    const totDivMgr = d1.divMgr + d2.divMgr + d3.divMgr + d4.divMgr + ts.divMgr + st.divMgr + cr.divMgr;
-    const totAm = d1.am + d2.am + d3.am + d4.am + ts.am + st.am + cr.am;
-    const totSu = d1.su + d2.su + d3.su + d4.su + ts.su + st.su + cr.su;
+    function O(key, defaultVal) {
+      return tableOverrides[key] !== undefined ? parseInt(tableOverrides[key]) || 0 : defaultVal;
+    }
+
+    const v_d1_div = O('d1_div', d1.divMgr); const v_d1_am = O('d1_am', d1.am); const v_d1_su = O('d1_su', d1.su);
+    const v_d2_div = O('d2_div', d2.divMgr); const v_d2_am = O('d2_am', d2.am); const v_d2_su = O('d2_su', d2.su);
+    const v_d3_div = O('d3_div', d3.divMgr); const v_d3_am = O('d3_am', d3.am); const v_d3_su = O('d3_su', d3.su);
+    const v_d4_div = O('d4_div', d4.divMgr); const v_d4_am = O('d4_am', d4.am); const v_d4_su = O('d4_su', d4.su);
+    const v_ts_div = O('ts_div', ts.divMgr); const v_ts_am = O('ts_am', ts.am); const v_ts_su = O('ts_su', ts.su);
+    const v_st_div = O('st_div', st.divMgr); const v_st_am = O('st_am', st.am); const v_st_su = O('st_su', st.su);
+    const v_cr_div = O('cr_div', cr.divMgr); const v_cr_am = O('cr_am', cr.am); const v_cr_su = O('cr_su', cr.su);
+
+    const totDivMgr = v_d1_div + v_d2_div + v_d3_div + v_d4_div + v_ts_div + v_st_div + v_cr_div;
+    const totAm = v_d1_am + v_d2_am + v_d3_am + v_d4_am + v_ts_am + v_st_am + v_cr_am;
+    const totSu = v_d1_su + v_d2_su + v_d3_su + v_d4_su + v_ts_su + v_st_su + v_cr_su;
     const salesTotal = 1 + totDivMgr + totAm + totSu; // +1 for HOD
 
-    const d1T = d1.divMgr + d1.am + d1.su;
-    const d2T = d2.divMgr + d2.am + d2.su;
-    const d3T = d3.divMgr + d3.am + d3.su;
-    const d4T = d4.divMgr + d4.am + d4.su;
-    const tsT = ts.divMgr + ts.am + ts.su;
-    const stT = st.divMgr + st.am + st.su;
-    const crT = cr.divMgr + cr.am + cr.su;
+    const d1T = v_d1_div + v_d1_am + v_d1_su;
+    const d2T = v_d2_div + v_d2_am + v_d2_su;
+    const d3T = v_d3_div + v_d3_am + v_d3_su;
+    const d4T = v_d4_div + v_d4_am + v_d4_su;
+    const tsT = v_ts_div + v_ts_am + v_ts_su;
+    const stT = v_st_div + v_st_am + v_st_su;
+    const crT = v_cr_div + v_cr_am + v_cr_su;
 
     // Helper for pure people counting in non-sales departments
     function countPeople(dId, excludeCount) {
@@ -1213,12 +1243,15 @@
       `;
     }
     if (deptId === 'salessummary') {
+      function td(key, val) {
+        return `<td contenteditable="true" data-override-key="${key}" title="Click to edit manually" style="cursor:text; background:rgba(255,255,255,0.4); outline:none; transition:0.2s;" onfocus="this.style.background='rgba(255,255,255,0.9)'; this.style.boxShadow='inset 0 0 0 2px #3498db';" onblur="this.style.background='rgba(255,255,255,0.4)'; this.style.boxShadow='none';">${val || '-'}</td>`;
+      }
       return `
         <div class="summary-tables-container">
           <table class="summary-table">
             <thead>
               <tr class="header-row">
-                <th colspan="9">Sales Department Designation Matrix (FY 2026-27 Proposed)</th>
+                <th colspan="9">Sales Department Designation Matrix (FY 2026-27 Proposed) <span style="font-size:12px;font-weight:normal;color:#ffeb3b;margin-left:10px;">(Click numbers to edit manually)</span></th>
               </tr>
               <tr>
                 <th>Designation</th>
@@ -1234,9 +1267,9 @@
             </thead>
             <tbody>
               <tr><td>HOD (Sr. GM)</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>1</td></tr>
-              <tr><td>DIV / RIG Manager</td><td>${d1.divMgr || '-'}</td><td>${d2.divMgr || '-'}</td><td>${d3.divMgr || '-'}</td><td>${d4.divMgr || '-'}</td><td>${ts.divMgr || '-'}</td><td>${st.divMgr || '-'}</td><td>${cr.divMgr || '-'}</td><td>${totDivMgr}</td></tr>
-              <tr><td>Area Manager</td><td>${d1.am || '-'}</td><td>${d2.am || '-'}</td><td>${d3.am || '-'}</td><td>${d4.am || '-'}</td><td>${ts.am || '-'}</td><td>${st.am || '-'}</td><td>${cr.am || '-'}</td><td>${totAm}</td></tr>
-              <tr><td>Sales Units</td><td>${d1.su || '-'}</td><td>${d2.su || '-'}</td><td>${d3.su || '-'}</td><td>${d4.su || '-'}</td><td>${ts.su || '-'}</td><td>${st.su || '-'}</td><td>${cr.su || '-'}</td><td>${totSu}</td></tr>
+              <tr><td>DIV / RIG Manager</td>${td('d1_div', v_d1_div)}${td('d2_div', v_d2_div)}${td('d3_div', v_d3_div)}${td('d4_div', v_d4_div)}${td('ts_div', v_ts_div)}${td('st_div', v_st_div)}${td('cr_div', v_cr_div)}<td>${totDivMgr}</td></tr>
+              <tr><td>Area Manager</td>${td('d1_am', v_d1_am)}${td('d2_am', v_d2_am)}${td('d3_am', v_d3_am)}${td('d4_am', v_d4_am)}${td('ts_am', v_ts_am)}${td('st_am', v_st_am)}${td('cr_am', v_cr_am)}<td>${totAm}</td></tr>
+              <tr><td>Sales Units</td>${td('d1_su', v_d1_su)}${td('d2_su', v_d2_su)}${td('d3_su', v_d3_su)}${td('d4_su', v_d4_su)}${td('ts_su', v_ts_su)}${td('st_su', v_st_su)}${td('cr_su', v_cr_su)}<td>${totSu}</td></tr>
               <tr class="total-row"><td>TOTAL</td><td>${d1T}</td><td>${d2T}</td><td>${d3T}</td><td>${d4T}</td><td>${tsT}</td><td>${stT}</td><td>${crT}</td><td>${salesTotal}</td></tr>
             </tbody>
           </table>
@@ -1337,6 +1370,20 @@
 
   function onEditBlur(e){
     const el = e.target;
+    
+    // Check if editing a summary table manual override cell
+    if (el.hasAttribute('data-override-key')) {
+      const key = el.getAttribute('data-override-key');
+      const text = el.innerText.trim();
+      if (text === '' || text === '-') {
+        delete tableOverrides[key];
+      } else {
+        tableOverrides[key] = text;
+      }
+      saveTableOverrides();
+      render();
+      return;
+    }
     
     // Division Stats editing
     const statField = el.dataset.stat;

@@ -184,7 +184,7 @@
     border-left: 2.5px solid var(--ink);
     border-top: none; border-right: none;
   }
-  .tree > ul { padding-top: 0; display: flex; justify-content: center; min-width: max-content; }
+  .tree > ul { padding-top: 0; display: flex; width: fit-content; margin: 0 auto; }
   .tree > ul > li { padding-top: 0; }
   .tree > ul > li::before, .tree > ul > li::after { display: none; }
 
@@ -844,7 +844,7 @@
     return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  let isFitScreen = true;
+  let isFitScreen = false;
 
   function autoFitFonts() {
     const fontMult = parseFloat(getComputedStyle(root).getPropertyValue('--font-mult')) || 1;

@@ -1184,8 +1184,8 @@
     const evTeamStats = countPeople('evteam');
 
     // Hardcoded baselines for departments with complex role strings
-    const pdiProposed = 65; const pdiExisting = 59;
-    const bodyProposed = 9; const bodyExisting = 8;
+    const pdiProposed = 61; const pdiExisting = 60;
+    const bodyProposed = 8; const bodyExisting = 8;
     const ckdProposed = 59; const ckdExisting = 45;
 
     const overallTotal = salesTotal + marketingStats.proposed + salesAdminStats.proposed + pdiProposed + bodyProposed + ckdProposed + evTeamStats.proposed;
@@ -1249,8 +1249,8 @@
               <tr><td>Sales Department</td><td>95</td><td>113</td><td>95</td><td>${salesShortfall}</td><td>${salesTotal}</td><td>Divisions 1-4, Tec Support, Special Task &amp; Collection &amp; Resale</td></tr>
               <tr><td>Marketing Department</td><td>9</td><td>9</td><td>${marketingStats.existing}</td><td>${marketingStats.proposed - marketingStats.existing}</td><td>${marketingStats.proposed}</td><td>1 Sr. Mgr, 1 Dept Mgr, 2 Vacancies (MIS, BTL)</td></tr>
               <tr><td>Sales Admin</td><td>16</td><td>16</td><td>${salesAdminStats.existing}</td><td>${salesAdminStats.proposed - salesAdminStats.existing}</td><td>${salesAdminStats.proposed}</td><td>4 Functional Wings under Sr. Manager (Mokhles)</td></tr>
-              <tr><td>PDI &amp; Painting</td><td>62</td><td>62</td><td>59</td><td>6</td><td>65</td><td>PDI Bhaluka (22), PDI Jashore (20), Admin (16), Painting (7)</td></tr>
-              <tr><td>Body Making</td><td>10</td><td>10</td><td>8</td><td>1</td><td>9</td><td>1 Sr. Exe, 5 Techs/Foreman, 3 Casual staff</td></tr>
+              <tr><td>PDI &amp; Painting</td><td>62</td><td>62</td><td>${pdiExisting}</td><td>${pdiProposed - pdiExisting}</td><td>${pdiProposed}</td><td>PDI Bhaluka (22), PDI Jashore (20), Admin (16), Painting (7)</td></tr>
+              <tr><td>Body Making</td><td>10</td><td>10</td><td>${bodyExisting}</td><td>${bodyProposed - bodyExisting}</td><td>${bodyProposed}</td><td>1 Sr. Exe, 5 Techs/Foreman, 3 Casual staff</td></tr>
               <tr><td>CKD (Assembly Plant)</td><td>49</td><td>54</td><td>45</td><td>14</td><td>59</td><td>Production (37), QC/Wty (11), Logistics (9), Admin (2)</td></tr>
               <tr><td>EV Team</td><td>0</td><td>0</td><td>${evTeamStats.existing}</td><td>${evTeamStats.proposed - evTeamStats.existing}</td><td>${evTeamStats.proposed}</td><td>1 Team Leader, 3 Executives</td></tr>
               <tr class="total-row"><td>TOTAL</td><td>241</td><td>264</td><td>${overallExisting}</td><td>${shortfall}</td><td>${overallTotal}</td><td>Grand Total Headcount: ${overallTotal}</td></tr>

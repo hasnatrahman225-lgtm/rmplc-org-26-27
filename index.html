@@ -450,16 +450,12 @@
       N("Vacant", "/ B4-4", { vacant: true })
     ]}),
     N("A. B. Siddique", "Dy Manager / D1", { note: "Chittagong Division", children: [
-      N("Corporate", "", { children: [
-        N("Mohammad Omar Faruq", "AM / D1-1"),
-        N("Md. Saiful Islam", "Sr. Executive / D1-2"),
-        N("Vacant", "/ D1-3", { vacant: true })
-      ]}),
-      N("Retail", "", { children: [
-        N("Md Hasan Tareq", "AM / D1-4"),
-        N("Vacant", "/ D1-5", { vacant: true }),
-        N("Vacant", "/ D1-6", { vacant: true })
-      ]})
+      N("Mohammad Omar Faruq", "AM / D1-1"),
+      N("Md. Saiful Islam", "Sr. Executive / D1-2"),
+      N("Vacant", "/ D1-3", { vacant: true }),
+      N("Md Hasan Tareq", "AM / D1-4"),
+      N("Vacant", "/ D1-5", { vacant: true }),
+      N("Vacant", "/ D1-6", { vacant: true })
     ]}),
     N("Md. Roknuzzaman", "Manager / D2", { note: "Comilla, B. Baria, Chandpur", children: [
       N("Md. Mohi Uddin", "AM / D2-1"),
@@ -789,9 +785,9 @@
         localStorage.setItem('div1_migrated_v3', 'true');
       }
       const div2 = parsed.find(d => d.id === 'div2');
-      if (div2 && localStorage.getItem('div2_migrated_v1') !== 'true') {
+      if (div2 && localStorage.getItem('div2_migrated_v2') !== 'true') {
         div2.tree = JSON.parse(JSON.stringify(deptDiv2));
-        localStorage.setItem('div2_migrated_v1', 'true');
+        localStorage.setItem('div2_migrated_v2', 'true');
       }
 
       // MIGRATION: Add EV Team if missing
@@ -1623,9 +1619,9 @@
           }
           
           const div2 = parsed.find(d => d.id === 'div2');
-          if (div2 && localStorage.getItem('div2_migrated_v1') !== 'true') {
+          if (div2 && localStorage.getItem('div2_migrated_v2') !== 'true') {
             div2.tree = JSON.parse(JSON.stringify(deptDiv2));
-            localStorage.setItem('div2_migrated_v1', 'true');
+            localStorage.setItem('div2_migrated_v2', 'true');
             
             setTimeout(() => {
               if (window.firebase) {

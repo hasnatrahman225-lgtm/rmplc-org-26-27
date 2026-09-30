@@ -422,63 +422,62 @@
     ]}),
   ]});
 
-  const deptDiv2 = N("Faruk Ahammed Akanda", "GM / DIV 2", { children: [
-    N("Md. Abdur Rahim Mondal", "Dy Manager / B1", { note: "Khulna", children: [
-      N("Md. Mustafa", "Officer / B1-1"),
-      N("Md. Shakawath Hossain", "Sr. Executive / B1-2"),
-      N("Vacant", "/ B1-3", { vacant: true }),
-      N("Vacant", "/ B1-4", { vacant: true })
-    ]}),
-    N("Syed Muhabub Hossain", "Manager / B2", { note: "Jessore", children: [
-      N("Md. Al Amin", "Officer / B2-1"),
-      N("Md. Arman Hasan", "/ B2-2"),
-      N("Md. Sofikur Rahman", "Sr. Executive / B2-3"),
-      N("Vacant", "/ B2-4", { vacant: true })
-    ]}),
-    N("Md. Abdul Kaiyum", "Dy Manager / B3", { note: "Faridpur", children: [
-      N("Md. Emran Hossain Bappi", "Sr. Executive / B3-1"),
-      N("Sumon Munsi", "Executive / B3-2"),
-      N("Md. Olikur Rahim Mia", "AM / B3-3", { note: "Bhola, Jhalakathi, Barishal" }),
-      N("Md. Ashikur Rahman", "Executive / B3-4", { note: "Barguna, Patuakhali, Barishal" }),
-      N("Md. Azizur Rahman", "Sr. Executive / B3-5", { note: "Gopalganj" }),
-      N("Vacant", "/ B3-6", { vacant: true })
-    ]}),
-    N("Md. Rafiqul Alam", "Manager / B4", { note: "Khustia", children: [
-      N("Md. Rubel Islam", "Sr. Executive / B4-1", { note: "Rajbari" }),
-      N("Md. Ibrahim Hossen", "Executive / B4-2", { note: "Chuadanga" }),
-      N("Vacant", "/ B4-3", { vacant: true }),
-      N("Vacant", "/ B4-4", { vacant: true })
-    ]}),
-    N("A. B. Siddique", "Dy Manager / D1", { note: "Chittagong Division", children: [
-      N("Mohammad Omar Faruq", "AM / D1-1"),
-      N("Md. Saiful Islam", "Sr. Executive / D1-2"),
-      N("Vacant", "/ D1-3", { vacant: true }),
-      N("Md Hasan Tareq", "AM / D1-4"),
-      N("Vacant", "/ D1-5", { vacant: true }),
-      N("Vacant", "/ D1-6", { vacant: true })
-    ]}),
-    N("Md. Roknuzzaman", "Manager / D2", { note: "Comilla, B. Baria, Chandpur", children: [
-      N("Md. Mohi Uddin", "AM / D2-1"),
-      N("Al- Amin", "Executive / D2-2"),
-      N("Vacant", "/ D2-3", { vacant: true }),
-      N("Vacant", "/ D2-4", { vacant: true })
-    ]}),
-    N("Md. Nazrul Islam", "/ D3", { note: "Noakhali, Laxmipur, Feni", children: [
-      N("Md. Nur Islam", "Executive / D3-1"),
-      N("Kamrul Hasan", "Executive / D3-2"),
-      N("Vacant", "/ D3-3", { vacant: true })
-    ]}),
-    N("Md. Aminul Islam", "Dy Manager / M3", { note: "Gazipur Sadar & Joydebpur Sadar", children: [
-      N("Md. Ashraful Karim", "AM / M3-1"),
-      N("Md. Sohel Rana", "Sr. Executive / M3-2"),
-      N("Vacant", "/ M3-3", { vacant: true })
-    ]}),
-    N("Mithun Biswas", "/ M4", { note: "Tongi & Kaligonj", children: [
-      N("Mithun Biswas", "Executive / M4-1"),
-      N("Sazib Ahmed", "Sr. Executive / M4-2"),
-      N("Vacant", "/ M4-3", { vacant: true })
-    ]})
-  ]});
+  const deptDiv2 = N("Faruk Ahammed Akanda", "GM / DIV 2", {
+    stats: {
+      mgr: { a1: '1', e1: '1', p2: '1', e2: '1' },
+      am:  { a1: '7', e1: '7', p2: '9', e2: '9' },
+      su:  { a1: '26', e1: '24', p2: '29', e2: '24' }
+    },
+    children: [
+      N("Md. Abdur Rahim Mondal", "Dy Manager / B-1", { note: "Khulna", children: [
+        N("Md. Mustafa", "Officer / B1-1", { note: "Area" }),
+        N("Md. Shakawath Hossain", "Sr. Executive / B1-2", { note: "Area" }),
+        N("Shohid Hossain", "Executive / B1-3", { note: "Area" })
+      ]}),
+      N("Syed Muhabub Hossain", "Manager / B-2", { note: "Jessore", children: [
+        N("Md. Sofikur Rahman", "Sr. Executive / B2-1", { note: "Area" }),
+        N("Md. Arman Hasan", "Executive / B2-2", { note: "Area" }),
+        N("Alamin", "Officer / B2-1", { note: "Area" })
+      ]}),
+      N("Md. Abdul Kaiyum", "Dy Manager / B-3", { note: "Faridpur", children: [
+        N("Sumon Munsi", "Executive / B3-1", { note: "Area" }),
+        N("Md. Emran Hossain Bappi", "Sr. Executive / B3-2", { note: "Area" }),
+        N("Md. Ashikur Rahman", "Executive / B3-3", { note: "Bhola, Jhalakathi, Barishal" }),
+        N("Jillur rahman", "Asst. Manager / B3-4", { note: "Barguna, Patuakhali, Barishal" })
+      ]}),
+      N("Md. Rafiqul Alam", "Asst Manager / B-4", { note: "Khustia", children: [
+        N("Md. Rubel Islam", "Sr. Executive / B4-1", { note: "Rajbari" }),
+        N("Md. Ibrahim Hossen", "Executive / B4-2", { note: "Chuadanga" }),
+        N("Vacant", "/ B4-3", { note: "Area", vacant: true })
+      ]}),
+      N("A. B. Siddique", "Dy Manager / D1", { note: "Chittagong Division", children: [
+        N("Md Hasan Tareq", "AM / D1-1", { note: "Area" }),
+        N("Md. Saiful Islam", "Sr. Executive / D1-2", { note: "Area" }),
+        N("Mohammad Omar Faruq", "/ D1-3", { note: "Area" }),
+        N("Md Ruhel", "Sr Executive / D1-4", { note: "Area" })
+      ]}),
+      N("Md. Roknuzzaman", "Manager / D2", { note: "Comilla, B. Baria, Chandpur", children: [
+        N("Md. Mohi Uddin", "AM / D2-1", { note: "Area" }),
+        N("Al- Amin", "Executive / D2-2", { note: "Area" }),
+        N("Vacant", "/ D2-3", { note: "Area", vacant: true })
+      ]}),
+      N("Md. Nazrul Islam", "Sr Executive/ D3", { note: "Noakhali, Laxmipur, Feni", children: [
+        N("Md. Nur Islam", "Executive / D3-1", { note: "Area" }),
+        N("Kamrul Hasan", "Executive / D3-2", { note: "note" }),
+        N("Vacant", "Designation / Unit name", { note: "Area", vacant: true })
+      ]}),
+      N("Md. Aminul Islam", "Dy Manager / M-3", { note: "Gazipur Sadar & Joydebpur Sadar", children: [
+        N("Md. Ashraful Karim", "AM / M3-1", { note: "Area" }),
+        N("Md. Sohel Rana", "Sr. Executive / M3-2", { note: "Area" }),
+        N("Vacant", "Designation / Unit name", { note: "Area", vacant: true })
+      ]}),
+      N("Mithun Biswas", "Executive/ M5", { note: "Tongi & Kaligonj", children: [
+        N("Sazib Ahmed", "Sr. Executive / M5-1", { note: "Area" }),
+        N("Sadia Afrin", "Sr. Executive / M5-2", { note: "Area" }),
+        N("Vacant", "Designation / Unit name", { note: "Area", vacant: true })
+      ]})
+    ]
+  });
 
   const deptDiv3 = N("K. Salahdin Al Osman", "DGM — Division 3", { children: [
     N("Area Manager", "N-1 (7)", { children: [
@@ -766,6 +765,12 @@
 
   function saveTableOverrides() {
     localStorage.setItem('rml_table_overrides', JSON.stringify(tableOverrides));
+    if (window.firebase && firebase.database) {
+      firebase.database().ref('organogram').update({
+        tableOverrides: JSON.stringify(tableOverrides),
+        updatedAt: Date.now()
+      });
+    }
   }
 
   try {
@@ -778,19 +783,17 @@
         supportTree.children[0].children[0].link.summaryNode = salesSumTree;
       }
       
-      // MIGRATION: Force update from hardcoded data if outdated
-      const div1 = parsed.find(d => d.id === 'div1');
-      if (div1 && localStorage.getItem('div1_migrated_v3') !== 'true') {
-        div1.tree = JSON.parse(JSON.stringify(deptDiv1));
-        localStorage.setItem('div1_migrated_v3', 'true');
-      }
-      const div2 = parsed.find(d => d.id === 'div2');
-      if (div2 && localStorage.getItem('div2_migrated_v2') !== 'true') {
-        div2.tree = JSON.parse(JSON.stringify(deptDiv2));
-        localStorage.setItem('div2_migrated_v2', 'true');
+      // One-time sync for Division 2 from latest PDF structure
+      if (localStorage.getItem('div2_pdf_synced_2026') !== 'true') {
+        const div2 = parsed.find(d => d.id === 'div2');
+        if (div2) {
+          div2.tree = JSON.parse(JSON.stringify(deptDiv2));
+          div2.stats = JSON.parse(JSON.stringify(deptDiv2.stats));
+        }
+        localStorage.setItem('div2_pdf_synced_2026', 'true');
       }
 
-      // MIGRATION: Add EV Team if missing
+      // Add EV Team if missing
       if (!parsed.some(d => d.id === 'evteam')) {
         parsed.push({
           id: 'evteam',
@@ -800,7 +803,7 @@
         });
       }
 
-      // MIGRATION: Add EV Team to Sales Support Summary if missing
+      // Add EV Team to Sales Support Summary if missing
       const localSupport = parsed.find(d => d.id === 'salessupport');
       if (localSupport && localSupport.tree && localSupport.tree.children && localSupport.tree.children[0] && localSupport.tree.children[0].children) {
         const hodChildren = localSupport.tree.children[0].children;
@@ -979,8 +982,11 @@
     localStorage.setItem('rml_org_depts', deptsStr);
     
     if (window.firebase && firebase.database) {
-      firebase.database().ref('organogram').set({
-        depts: deptsStr
+      firebase.database().ref('organogram').update({
+        depts: deptsStr,
+        tableOverrides: JSON.stringify(tableOverrides),
+        div2_pdf_synced_2026: true,
+        updatedAt: Date.now()
       });
     }
   }
@@ -1014,7 +1020,7 @@
           <button class="btn" data-action="zoom-in">Box +</button>
           <button class="btn" data-action="undo" title="Undo (Ctrl+Z)" style="font-weight:bold; color:#0366d6;">↶ Undo</button>
           <button class="btn" data-action="theme">🎨 Formatting</button>
-          <button class="btn primary" data-action="save">💾 Save Progress</button>
+          <span style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; color:#15803d; background:#dcfce7; padding:4px 9px; border-radius:4px; border:1px solid #86efac;" title="Real-time Auto-save is active across all devices"><span style="width:7px; height:7px; border-radius:50%; background:#16a34a; display:inline-block;"></span> Real-time Auto-Saved</span>
           <button class="btn" data-action="print">Print / Save PDF</button>
           <button class="btn primary" data-action="export">Export JSON</button>
         </div>
@@ -1589,14 +1595,17 @@
     db.ref('organogram').on('value', (snapshot) => {
       const data = snapshot.val();
       if (!data) return; // If empty, our first autoSaveLocal will populate it
+
+      if (data.tableOverrides) {
+        try {
+          tableOverrides = JSON.parse(data.tableOverrides);
+          localStorage.setItem('rml_table_overrides', data.tableOverrides);
+        } catch(e){}
+      }
       
       const currentDeptsStr = JSON.stringify(DEPTS);
       
-      if (data.depts === currentDeptsStr) {
-        return; // Exact echo, ignore
-      }
-      
-      if (data.depts && data.depts !== currentDeptsStr) {
+      if (data.depts) {
         try {
           const parsed = JSON.parse(data.depts);
           const salesSumTree = parsed.find(d => d.id === 'salessummary')?.tree;
@@ -1605,29 +1614,28 @@
             supportTree.children[0].children[0].link.summaryNode = salesSumTree;
           }
           
-          // --- MIGRATION: Force update Div-1 from hardcoded data if it's outdated in Firebase ---
-          const div1 = parsed.find(d => d.id === 'div1');
-          if (div1 && localStorage.getItem('div1_migrated_v3') !== 'true') {
-            div1.tree = JSON.parse(JSON.stringify(deptDiv1));
-            localStorage.setItem('div1_migrated_v3', 'true');
-            
-            setTimeout(() => {
-              if (window.firebase) {
-                firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
-              }
-            }, 2000);
+          // One-time sync of Division 2 to cloud matching user's PDF
+          if (!data.div2_pdf_synced_2026) {
+            const div2Node = parsed.find(d => d.id === 'div2');
+            if (div2Node) {
+              div2Node.tree = JSON.parse(JSON.stringify(deptDiv2));
+              div2Node.stats = JSON.parse(JSON.stringify(deptDiv2.stats));
+            }
+            DEPTS = parsed;
+            lastSavedStr = JSON.stringify(DEPTS);
+            localStorage.setItem('rml_org_depts', lastSavedStr);
+            firebase.database().ref('organogram').update({
+              depts: lastSavedStr,
+              tableOverrides: JSON.stringify(tableOverrides),
+              div2_pdf_synced_2026: true,
+              updatedAt: Date.now()
+            });
+            render(true);
+            return;
           }
           
-          const div2 = parsed.find(d => d.id === 'div2');
-          if (div2 && localStorage.getItem('div2_migrated_v2') !== 'true') {
-            div2.tree = JSON.parse(JSON.stringify(deptDiv2));
-            localStorage.setItem('div2_migrated_v2', 'true');
-            
-            setTimeout(() => {
-              if (window.firebase) {
-                firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
-              }
-            }, 2500);
+          if (data.depts === currentDeptsStr) {
+            return; // Exact echo, ignore
           }
           
           if (!parsed.some(d => d.id === 'evteam')) {
@@ -1637,28 +1645,19 @@
               meta: 'EV Team Organogram - Minimum Designation Manager or above',
               tree: JSON.parse(JSON.stringify(deptEVTeam))
             });
-            setTimeout(() => {
-              if (window.firebase) {
-                firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
-              }
-            }, 3000);
           }
 
-          // MIGRATION: Add EV Team to Sales Support Summary if missing
           const remoteSupport = parsed.find(d => d.id === 'salessupport');
           if (remoteSupport && remoteSupport.tree && remoteSupport.tree.children && remoteSupport.tree.children[0] && remoteSupport.tree.children[0].children) {
             const hodChildren = remoteSupport.tree.children[0].children;
             if (!hodChildren.some(c => c.link && c.link.openTab === 'evteam')) {
               hodChildren.push(L("EV TEAM", "(4)", 'evteam'));
-              setTimeout(() => {
-                if (window.firebase) firebase.database().ref('organogram/depts').set(JSON.stringify(parsed));
-              }, 3500);
             }
           }
-          // ----------------------------------------------------------------------------------------
 
           DEPTS = parsed;
           lastSavedStr = JSON.stringify(DEPTS);
+          localStorage.setItem('rml_org_depts', lastSavedStr);
           
           const activeEl = document.activeElement;
           const isTyping = activeEl && activeEl.hasAttribute('contenteditable');

@@ -479,6 +479,12 @@
     ]
   });
 
+  const div2Stats = {
+    mgr: { a1: '1', e1: '1', p2: '1', e2: '1' },
+    am:  { a1: '7', e1: '7', p2: '9', e2: '9' },
+    su:  { a1: '26', e1: '24', p2: '29', e2: '24' }
+  };
+
   const deptDiv3 = N("K. Salahdin Al Osman", "DGM — Division 3", { children: [
     N("Area Manager", "N-1 (7)", { children: [
       N("N1-1","Sales Unit"), N("N1-2","Sales Unit"), N("N1-3","Sales Unit"), N("N1-4","Sales Unit"), N("N1-5","Sales Unit"), N("N1-KAM","Sales Unit")
@@ -745,7 +751,7 @@
     { id:'salessupport', label:'⭐ Sales & Support Summary', meta:'Runner Motors PLC — Sales & Supporting Department Organogram · totals below are calculated live from every department tab', tree: salesSupportSummary, isSummary: true },
     { id:'salessummary', label:'⭐ Sales Dept Summary', meta:'Runner Motors PLC — Sales Department Organogram · totals below are calculated live from Division 1–4/RIG-1, Tech Support, Special Task & Collection and Resale tabs', tree: salesDeptSummary, isSummary: true },
     { id:'div1', label:'Division 1', meta:'RMPLC Division 01 Organogram · FY 2026-27', tree: deptDiv1 },
-    { id:'div2', label:'Division 2', meta:'RMPLC Division 02 Organogram · FY 2026-27 (some names from handwritten notes — please verify)', tree: deptDiv2 },
+    { id:'div2', label:'Division 2', meta:'RMPLC Division 02 Organogram · FY 2026-27 (some names from handwritten notes — please verify)', tree: deptDiv2, stats: JSON.parse(JSON.stringify(div2Stats)) },
     { id:'div3', label:'Division 3', meta:'DIV-3 Organogram FY 2026-27 · Div Manager 1, Area Manager 5 (4 existing, 1 short), Sales Units 19 proposed (10 existing, 8 short)', tree: deptDiv3 },
     { id:'div4', label:'Division 4 / RIG-1', meta:'DIV-4 Manpower (formerly RIG-1) · Existing 12 of 13 proposed, 1 vacant (COC3-3, to be filled before FY26-27)', tree: deptDiv4 },
     { id:'techsupport', label:'Technical Support & Training', meta:'Technical Support & Training team — add/rename positions here; feeds the Sales Dept summary', tree: deptTechSupport },
@@ -788,7 +794,7 @@
         const div2 = parsed.find(d => d.id === 'div2');
         if (div2) {
           div2.tree = JSON.parse(JSON.stringify(deptDiv2));
-          div2.stats = JSON.parse(JSON.stringify(deptDiv2.stats));
+          div2.stats = JSON.parse(JSON.stringify(div2Stats));
         }
         localStorage.setItem('div2_pdf_synced_2026', 'true');
       }
@@ -993,6 +999,12 @@
 
   function render(fromRemote = false){
     const dept = DEPTS[activeDept];
+    if (dept.id === 'div2' && (!dept.tree || !dept.tree.children || dept.tree.children.length === 0)) {
+      dept.tree = JSON.parse(JSON.stringify(deptDiv2));
+    }
+    if (dept.id === 'div2' && (!dept.stats || !dept.stats.mgr || !dept.stats.mgr.a1)) {
+      dept.stats = JSON.parse(JSON.stringify(div2Stats));
+    }
     const t = dept.theme || {};
     root.style.setProperty('--node-w', t.w || '120px');
     root.style.setProperty('--font-mult', t.f || '1');
@@ -1308,12 +1320,16 @@
 
   function renderDivStatsTable(dept) {
     if (!['div1', 'div2', 'div3', 'div4'].includes(dept.id)) return '';
-    if (!dept.stats) {
-      dept.stats = {
-        mgr: { a1: '', e1: '', p2: '', e2: '' },
-        am:  { a1: '', e1: '', p2: '', e2: '' },
-        su:  { a1: '', e1: '', p2: '', e2: '' }
-      };
+    if (!dept.stats || (dept.id === 'div2' && (!dept.stats.mgr || !dept.stats.mgr.a1))) {
+      if (dept.id === 'div2') {
+        dept.stats = JSON.parse(JSON.stringify(div2Stats));
+      } else {
+        dept.stats = {
+          mgr: { a1: '', e1: '', p2: '', e2: '' },
+          am:  { a1: '', e1: '', p2: '', e2: '' },
+          su:  { a1: '', e1: '', p2: '', e2: '' }
+        };
+      }
     }
     const s = dept.stats;
     const s1_mgr = (parseFloat(s.mgr.a1)||0) - (parseFloat(s.mgr.e1)||0);
@@ -1619,7 +1635,7 @@
             const div2Node = parsed.find(d => d.id === 'div2');
             if (div2Node) {
               div2Node.tree = JSON.parse(JSON.stringify(deptDiv2));
-              div2Node.stats = JSON.parse(JSON.stringify(deptDiv2.stats));
+              div2Node.stats = JSON.parse(JSON.stringify(div2Stats));
             }
             DEPTS = parsed;
             lastSavedStr = JSON.stringify(DEPTS);
